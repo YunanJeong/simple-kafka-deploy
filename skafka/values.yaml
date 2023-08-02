@@ -1,0 +1,120 @@
+# Default values for simple-kafka-deploy.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+
+global:
+  monitorDomain: test.wai
+  imageRegistry: docker.io            # bitnami 계열 글로벌 
+  image:                              # grafana 계열   
+    registry: docker.io              
+
+kafka:
+  # nodeSelector:                 # Pod 배치전략
+  #   alpaka/node-type: worker    # kubectl로 관리가능. label에 'alpaka/node-type=worker'라는 항목이 추가되어있는 node에 Pod이 실행된다.
+  persistence:
+    size: 20Gi                  # data-{release}-kafka-0. 가용량의 약 70~80% 330Gi
+  replicaCount: 2
+  defaultReplicationFactor: 1
+  numPartitions: 1              # 토픽생성시 디폴트 파티션 수
+  deleteTopicEnable: true
+  service:
+    type: LoadBalancer
+    ports:
+      external: 9095                  # "tcp-external"
+    headless:
+      publishNotReadyAddresses: true  # 23.0.5 버전 멀티클러스터가 안켜지는 버그 대응
+  externalAccess:
+    enabled: true
+    service:
+      enabled: false
+      ports:
+        external: 9095                # 네트워크상 실제 사용가능한 Port("tcp-kafka")
+    #  annotations:
+    #    external-dns.alpha.kubernetes.io/hostname: "{{ .targetPod }}.example.com"
+    #autoDiscovery:
+    #  enabled: true
+  #serviceAccount:
+  #  create: true
+  #rbac: 
+  #  create: true
+      #loadBalancerIPs:
+      #  - "X.X.X.X"
+      #  - "Y.Y.Y.Y"
+      loadBalancerNames:
+        - apk-kafka-0.apk-kafka-headless.default.svc.cluster.local  # 172.X.X.X
+        - apk-kafka-1.apk-kafka-headless.default.svc.cluster.local  # DNS서버 or etc/hosts 에 추가 필요
+  # advertisedListeners:  # []
+    # - "INTERNAL://:9094"
+    # - "CLIENT://X.X.X.X:9092"
+    # - "EXTERNAL://X.X.X.X:9095"
+
+k8dashboard:
+  enabled: true
+  image:
+    registry: docker.io
+  protocolHttp: true 
+  service:
+    externalPort: 8443
+  serviceAccount:
+    name: k8dash-admin
+  extraArgs:
+    - --token-ttl=86400
+    - --enable-skip-login 
+    - --enable-insecure-login
+  tolerations:
+  - key: type
+    operator: "Equal"
+    value: "ctrl"
+    effect: "NoSchedule"
+
+ui4kafka:
+  enabled: true
+  image:
+    registry: docker.io
+  yamlApplicationConfig:
+    kafka:
+      clusters:
+      - name: apk-kafka
+        bootstrapServers: apk-kafka-headless:9092
+        zookeeper: apk-zookeeper-headless:2181
+        kafkaConnect:
+        #
+        # 주의 : 이 아래 섹션을 kafka_connect.connects 에 등록한 connect 에 대해 순회
+        # CONNECT_TYPE 은 kafka_connect.connects.type 
+        #
+        - name: CONNECT_TYPE
+          address: http://apk-alpaka-CONNECT_TYPE:8083
+        metrics:
+          port: 5556
+          type: JMX
+    auth:
+      type: disabled
+    management:
+      health:
+        ldap:
+          enabled: false
+  tolerations:
+  - key: type
+    operator: "Equal"
+    value: "ctrl"
+    effect: "NoSchedule"
+
+ingress:
+  enabled: true
+  annotations:
+  # # minikube 설치용
+  # kubernetes.io/ingress.class: nginx
+
+  # # k3s 설치용
+  kubernetes.io/ingress.class: traefik
+
+  # # k3d 설치용
+  # ingress.kubernetes.io/ssl-redirect: "false"
+
+  # # AWS EKS 설치용
+  # kubernetes.io/ingress.class: alb
+  # alb.ingress.kubernetes.io/group.name: public
+  # alb.ingress.kubernetes.io/scheme: internet-facing
+  # alb.ingress.kubernetes.io/target-type: ip
+  # alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 9090}]'

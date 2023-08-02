@@ -1,0 +1,40 @@
+{{- if .Values.ingress.enabled -}}
+{{- $fullName := include "simple-kafka-deploy.fullname" . -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $fullName }}-ingress
+  annotations:
+    {{- if .Values.ingress.annotations }}
+    {{- include "common.tplvalues.render" (dict "value" .Values.ingress.annotations "context" $) | nindent 4 }}
+    {{- end }}
+spec:
+  rules:
+    {{ if .Values.k8dashboard.enabled }}
+    - host: k8dashboard.{{ .Values.global.monitorDomain }}
+      http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: {{ $fullName }}-k8dashboard
+              port:
+                number: 8443
+    {{- end }}
+    {{ if .Values.kafka-ui.enabled }}
+    - host: ui4kafka.{{ .Values.global.monitorDomain }}
+      http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: {{ $fullName }}-kafka-ui
+              port:
+                number: 80
+    {{- end }}
+
+
+
+
