@@ -39,4 +39,5 @@ dependencies:
   - name: kafka-ui
     version: 0.7.2
     repository: https://provectus.github.io/kafka-ui-charts
-    condition: kafka-ui.enabled
+    alias: ui4kafka
+    condition: ui4kafka.enabled

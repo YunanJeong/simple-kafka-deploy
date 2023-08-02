@@ -1,0 +1,12 @@
+dependencies:
+- name: kafka
+  repository: https://charts.bitnami.com/bitnami
+  version: 23.0.7
+- name: kubernetes-dashboard
+  repository: https://kubernetes.github.io/dashboard/
+  version: 6.0.7
+- name: kafka-ui
+  repository: https://provectus.github.io/kafka-ui-charts
+  version: 0.7.2
+digest: sha256:8e1ac6a3cc09b5bde1f12dfd8444ea5a17a93e68c4897bf119834398fa4993ab
+generated: "2023-08-02T18:20:12.405016614+09:00"

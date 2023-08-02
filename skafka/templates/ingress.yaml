@@ -1,5 +1,5 @@
 {{- if .Values.ingress.enabled -}}
-{{- $fullName := include "simple-kafka-deploy.fullname" . -}}
+{{- $fullName := include "skafka.fullname" . -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -22,7 +22,7 @@ spec:
               port:
                 number: 8443
     {{- end }}
-    {{ if .Values.kafka-ui.enabled }}
+    {{ if .Values.ui4kafka.enabled }}
     - host: ui4kafka.{{ .Values.global.monitorDomain }}
       http:
         paths:
@@ -34,7 +34,6 @@ spec:
               port:
                 number: 80
     {{- end }}
-
-
+{{- end }}
 
 
