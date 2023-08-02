@@ -29,7 +29,7 @@ kafka:
     service:
       enabled: false
       ports:
-        external: 9096                # 네트워크상 실제 사용가능한 Port("tcp-kafka")
+        external: 9094                # 네트워크상 실제 사용가능한 Port("tcp-kafka")
     #  annotations:
     #    external-dns.alpha.kubernetes.io/hostname: "{{ .targetPod }}.example.com"
     #autoDiscovery:
@@ -38,20 +38,20 @@ kafka:
   #  create: true
   #rbac: 
   #  create: true
-      #loadBalancerIPs:
-      #  - "X.X.X.X"
-      #  - "Y.Y.Y.Y"
+      loadBalancerIPs:
+        - "X.X.X.X"
+        - "Y.Y.Y.Y"
       loadBalancerNames:
         - apk-kafka-0.apk-kafka-headless.default.svc.cluster.local  # 172.X.X.X
-        # - apk-kafka-1.apk-kafka-headless.default.svc.cluster.local  # DNS서버 or etc/hosts 에 추가 필요
-  # advertisedListeners:  # []
-    # - "INTERNAL://:9094"
-    # - "CLIENT://X.X.X.X:9092"
-    # - "EXTERNAL://X.X.X.X:9095"
+        - apk-kafka-1.apk-kafka-headless.default.svc.cluster.local  # DNS서버 or etc/hosts 에 추가 필요
+  advertisedListeners:  # []
+    - "INTERNAL://:9094"
+    - "CLIENT://X.X.X.X:9092"
+    - "EXTERNAL://X.X.X.X:9095"
 
 k8dashboard:
   enabled: true
-  image:
+  image:  # 글로벌 적용 불가
     registry: docker.io
   protocolHttp: true 
   service:
@@ -70,7 +70,7 @@ k8dashboard:
 
 ui4kafka:
   enabled: true
-  image:
+  image:  # 글로벌 적용 불가
     registry: docker.io
   yamlApplicationConfig:
     kafka:
