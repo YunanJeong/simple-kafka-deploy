@@ -4,10 +4,10 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ $fullName }}-ingress
+  {{- with .Values.ingress.annotations }}
   annotations:
-    {{- if .Values.ingress.annotations }}
-    {{- include "common.tplvalues.render" (dict "value" .Values.ingress.annotations "context" $) | nindent 4 }}
-    {{- end }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   rules:
     {{ if .Values.k8dashboard.enabled }}
@@ -18,7 +18,7 @@ spec:
           pathType: Prefix
           backend:
             service:
-              name: {{ $fullName }}-k8dashboard
+              name: {{ .Release.Name }}-k8dashboard
               port:
                 number: 8443
     {{- end }}
@@ -30,7 +30,7 @@ spec:
           pathType: Prefix
           backend:
             service:
-              name: {{ $fullName }}-kafka-ui
+              name: {{ .Release.Name }}-ui4kafka
               port:
                 number: 80
     {{- end }}

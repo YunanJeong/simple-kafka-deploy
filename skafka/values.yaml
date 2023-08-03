@@ -13,41 +13,63 @@ kafka:
   # nodeSelector:                 # Pod 배치전략
   #   alpaka/node-type: worker    # kubectl로 관리가능. label에 'alpaka/node-type=worker'라는 항목이 추가되어있는 node에 Pod이 실행된다.
   persistence:
-    size: 20Gi                  # pvc data-{release}-kafka-0, 가용량의 70~80%, 500Gi기준 약 330Gi
-  replicaCount: 2
+    size: 8Gi                   # pvc data-{release}-kafka-0, 가용량의 70~80%, 500Gi기준 약 330Gi
+  replicaCount: 1
   defaultReplicationFactor: 1
   numPartitions: 1              # 토픽생성시 디폴트 파티션 수
   deleteTopicEnable: true
-  service:
-    type: LoadBalancer
-    ports:
-      external: 9095                  # "tcp-external"
-    headless:
-      publishNotReadyAddresses: true  # 23.0.5 버전 멀티클러스터가 안켜지는 버그 대응
-  externalAccess:
+  
+  # service:
+  #   type: LoadBalancer
+  #   ports:
+  #     external: 9095                  # "tcp-external"
+  #   headless:
+  #     publishNotReadyAddresses: true  # 23.0.5 버전 멀티클러스터가 안켜지는 버그 대응
+
+  # externalAccess:
+  #   enabled: true
+  #   autoDiscovery:
+  #     enabled: true
+  #   service:
+  #     ports:
+  #       external: 9094                # 네트워크상 실제 사용가능한 Port("tcp-kafka")
+  #     annotations:
+  #       external-dns.alpha.kubernetes.io/hostname: "{{ .targetPod }}.example.com"
+  #     loadBalancerIPs:
+  #       - "X.X.X.X"
+  #       - "Y.Y.Y.Y"
+  #     loadBalancerNames:
+  #       - apk-kafka-0.apk-kafka-headless.default.svc.cluster.local  # 172.X.X.X
+  #       - apk-kafka-1.apk-kafka-headless.default.svc.cluster.local  # DNS서버 or etc/hosts 에 추가 필요
+
+  # advertisedListeners:  # []
+  #   - "INTERNAL://:9094"
+  #   - "CLIENT://X.X.X.X:9092"
+  #   - "EXTERNAL://X.X.X.X:9095"
+
+  # serviceAccount:
+  #   create: true
+
+  # rbac: 
+  #   create: true
+
+  kraft:
     enabled: true
-    service:
+  zookeeper:
+    enabled: false
+    replicaCount: 1
+    metrics:
       enabled: false
-      ports:
-        external: 9094                # 네트워크상 실제 사용가능한 Port("tcp-kafka")
-    #  annotations:
-    #    external-dns.alpha.kubernetes.io/hostname: "{{ .targetPod }}.example.com"
-    #autoDiscovery:
-    #  enabled: true
-  #serviceAccount:
-  #  create: true
-  #rbac: 
-  #  create: true
-      loadBalancerIPs:
-        - "X.X.X.X"
-        - "Y.Y.Y.Y"
-      loadBalancerNames:
-        - apk-kafka-0.apk-kafka-headless.default.svc.cluster.local  # 172.X.X.X
-        - apk-kafka-1.apk-kafka-headless.default.svc.cluster.local  # DNS서버 or etc/hosts 에 추가 필요
-  advertisedListeners:  # []
-    - "INTERNAL://:9094"
-    - "CLIENT://X.X.X.X:9092"
-    - "EXTERNAL://X.X.X.X:9095"
+      serviceMonitor:
+        enabled: false
+  
+  metrics: 
+    kafka:
+      enabled: true
+      # nodeSelector:
+    jmx:
+      enabled: true
+
 
 k8dashboard:
   enabled: true
@@ -70,24 +92,20 @@ k8dashboard:
 
 ui4kafka:
   enabled: true
-  image:  # 글로벌 적용 불가
+  image:  # 글로벌 적용 불가https://www.google.com/imgres?imgurl=https%3A%2F%2Fmblogthumb-phinf.pstatic.net%2FMjAyMTAxMjhfMjE4%2FMDAxNjExODAxMjIyMTE3.wvvJGWX_kGthBYwtKeNKodsGFKZXxMtn9rOaDYLH5qkg.LQhYzrL4HhtwX_sftjQaMVGcNib1RW3ZMbADmARUISsg.PNG.woorieyeswj%2F2.png%3Ftype%3Dw800&tbnid=i3cHlNLZWBYHLM&vet=12ahUKEwirrI6fwb-AAxUFt1YBHaq7AcsQMygBegUIARDSAQ..i&imgrefurl=https%3A%2F%2Fm.blog.naver.com%2Fwoorieyeswj%2F222222815039&docid=SrLboKfzcVRGtM&w=800&h=801&q=%EA%B4%91%EC%8B%9C%EC%A6%9D&ved=2ahUKEwirrI6fwb-AAxUFt1YBHaq7AcsQMygBegUIARDSAQ
     registry: docker.io
   yamlApplicationConfig:
     kafka:
       clusters:
-      - name: apk-kafka
-        bootstrapServers: apk-kafka-headless:9092
-        zookeeper: apk-zookeeper-headless:2181
-        kafkaConnect:
-        #
-        # 주의 : 이 아래 섹션을 kafka_connect.connects 에 등록한 connect 에 대해 순회
-        # CONNECT_TYPE 은 kafka_connect.connects.type 
-        #
-        - name: CONNECT_TYPE
-          address: http://apk-alpaka-CONNECT_TYPE:8083
-        metrics:
-          port: 5556
-          type: JMX
+        - name: kkk-kafka
+          bootstrapServers: kkk-kafka-headless:9092
+          # zookeeper: kkk-zookeeper-headless:2181
+          # kafkaConnect:
+          #   - name: connect                              # kafka_connect.connects에서 정의한 이름을 기술
+          #     address: http://kkk-alpaka-connect:8083
+          # metrics:
+          #   port: 5556
+          #   type: JMX
     auth:
       type: disabled
     management:
@@ -103,18 +121,18 @@ ui4kafka:
 ingress:
   enabled: true
   annotations:
-  # # minikube 설치용
-  # kubernetes.io/ingress.class: nginx
+    # # minikube 설치용
+    # kubernetes.io/ingress.class: nginx
 
-  # # k3s 설치용
-  kubernetes.io/ingress.class: traefik
+    # # k3s 설치용
+    kubernetes.io/ingress.class: traefik
 
-  # # k3d 설치용
-  # ingress.kubernetes.io/ssl-redirect: "false"
+    # # k3d 설치용
+    # ingress.kubernetes.io/ssl-redirect: "false"
 
-  # # AWS EKS 설치용
-  # kubernetes.io/ingress.class: alb
-  # alb.ingress.kubernetes.io/group.name: public
-  # alb.ingress.kubernetes.io/scheme: internet-facing
-  # alb.ingress.kubernetes.io/target-type: ip
-  # alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 9090}]'
+    # # AWS EKS 설치용
+    # kubernetes.io/ingress.class: alb
+    # alb.ingress.kubernetes.io/group.name: public
+    # alb.ingress.kubernetes.io/scheme: internet-facing
+    # alb.ingress.kubernetes.io/target-type: ip
+    # alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 9090}]'
