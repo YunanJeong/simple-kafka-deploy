@@ -5,18 +5,18 @@
 
 global:
   monitorDomain: test.wai
-  imageRegistry: docker.io            # bitnami 계열 글로벌 
-  image:                              # grafana 계열 글로벌
+  imageRegistry: docker.io              # bitnami 계열 글로벌 
+  image:                                # grafana 계열 글로벌
     registry: docker.io              
 
 kafka:
-  # nodeSelector:                 # Pod 배치전략
-  #   alpaka/node-type: worker    # kubectl로 관리가능. label에 'alpaka/node-type=worker'라는 항목이 추가되어있는 node에 Pod이 실행된다.
+  # nodeSelector:                       # Pod 배치전략
+  #   alpaka/node-type: worker          # kubectl로 관리가능. label에 'alpaka/node-type=worker'라는 항목이 추가되어있는 node에 Pod이 실행된다.
   persistence:
-    size: 8Gi                   # pvc data-{release}-kafka-0, 가용량의 70~80%, 500Gi기준 약 330Gi
+    size: 8Gi                           # pvc data-{release}-kafka-0, 가용량의 70~80%, 500Gi기준 약 330Gi
   replicaCount: 1
   defaultReplicationFactor: 1
-  numPartitions: 1              # 토픽생성시 디폴트 파티션 수
+  numPartitions: 1                      # 토픽생성시 디폴트 파티션 수
   deleteTopicEnable: true
   
   # service:
@@ -30,25 +30,22 @@ kafka:
     enabled: false
     autoDiscovery:
       enabled: false
+      image:
+        registry: docker.io             # 비인터넷환경 => 프록시registry를 쓰거나, autoDiscovery대신 loadBalancerIP 명시
     service:
       ports:
-        external: 9094                # 네트워크상 실제 사용가능한 Port("tcp-kafka")
-      annotations: {}
-        # external-dns.alpha.kubernetes.io/hostname: "{{ .targetPod }}.example.com"
+        external: 9094                  # 네트워크상 실제 사용가능한 Port("tcp-kafka")
       loadBalancerIPs: []
         # - "X.X.X.X"
         # - "Y.Y.Y.Y"
       loadBalancerNames: []
         # - apk-kafka-0.apk-kafka-headless.default.svc.cluster.local  # 172.X.X.X
-        # - apk-kafka-1.apk-kafka-headless.default.svc.cluster.local  # DNS서버 or etc/hosts 에 추가 필요
+        # - apk-kafka-1.apk-kafka-headless.default.svc.cluster.local  # DNS서버 or /etc/hosts 에 추가 필요
 
   # advertisedListeners:  # []
   #   - "INTERNAL://:9094"
   #   - "CLIENT://X.X.X.X:9092"
   #   - "EXTERNAL://X.X.X.X:9095"
-
-  serviceAccount:
-    create: false
 
   rbac: 
     create: false
