@@ -1,20 +1,33 @@
 # simple-kafka-deploy
 
-kafka-deploy by helm, k8s, kafka-ui
+로컬테스트 등 용도로 가벼운 Kafka를 빠르게 배포하기 위한 Helm Chart
 
-로컬테스트 등의 용도로 가볍고 빠르게 Kafka를 배포하기 위한 Helm Chart
+Kubernetes용 대시보드, Kafka, Kafka-ui만 포함한다. 다른 컴포넌트(Grafana, Streams, ...) 등을 추가할 시 별도 릴리즈로 배포하도록 하자.
 
-Kafka, K8sDashboard, Kafka-ui만 포함한다.
+## 사용법
 
-다른 컴포넌트(Grafana, Streams, ...) 등을 추가할 시 다른 차트, 릴리즈로 추가배포하도록 하자.
+### 수정 시
 
-# 실행
+```shell
+# dependency 다운로드 (skafka 경로에서 실행)
+helm dependency update
 
+# 차트를 아카이브 파일로 생성
+helm package skafka/
 ```
+
+### 배포 시
+
+```shell
+# 첫 설치
 # helm install {ReleaseName} {chart archive} {custom config value}
 helm install testbed chartrepo/skafka-0.1.0.tgz -f values/testbed.yaml
+
+# 업데이트
+helm upgrade testbed chartrepo/skafka-0.1.0.tgz -f values/testbed.yaml
 ```
 
-# 메모
+## 메모
+
 - 헬름차트 bitnami/kafka:23.0.7에서 보안설정이 없으면 파워쉘에서 Kafka에 네트워크 연결이 안될 수 있다. [참고](https://stackoverflow.com/questions/48603203/powershell-invoke-webrequest-throws-webcmdletresponseexception)
-    - 외부연결 테스트는 일반 cmd 등으로 수행하자.
+  - 외부연결 테스트는 일반 cmd 등으로 수행하자.
