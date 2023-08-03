@@ -1,7 +1,5 @@
-# Default values for skafka.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
+# helm install시 사용되는 config value는 노출되지 않도록 gitignore권장
+# 이 파일은 로컬테스트용이라 샘플삼아 그냥 업로드한다.
 
 global:
   monitorDomain: test.wai
@@ -13,21 +11,21 @@ kafka:
   # nodeSelector:                 # Pod 배치전략
   #   alpaka/node-type: worker    # kubectl로 관리가능. label에 'alpaka/node-type=worker'라는 항목이 추가되어있는 node에 Pod이 실행된다.
   persistence:
-    size: 8Gi                   # pvc data-{release}-kafka-0, 가용량의 70~80%, 500Gi기준 약 330Gi
+    size: 8Gi                     # pvc data-{release}-kafka-0, 가용량의 70~80%, 500Gi기준 약 330Gi
   replicaCount: 1
   defaultReplicationFactor: 1
-  numPartitions: 1              # 토픽생성시 디폴트 파티션 수
+  numPartitions: 1                # 토픽생성시 디폴트 파티션 수
   deleteTopicEnable: true
   
-  # service:
-  #   type: LoadBalancer
-  #   ports:
-  #     external: 9095                  # "tcp-external"
-  #   headless:
-  #     publishNotReadyAddresses: true  # 23.0.5 버전 멀티클러스터가 안켜지는 버그 대응
+  service:
+    type: LoadBalancer
+    ports:
+      external: 9095                  # "tcp-external"
+    headless:
+      publishNotReadyAddresses: true  # 23.0.5 버전 멀티클러스터가 안켜지는 버그 대응
 
   externalAccess:
-    enabled: false
+    enabled: true
     autoDiscovery:
       enabled: false
     service:
@@ -35,8 +33,8 @@ kafka:
         external: 9094                # 네트워크상 실제 사용가능한 Port("tcp-kafka")
       annotations: {}
         # external-dns.alpha.kubernetes.io/hostname: "{{ .targetPod }}.example.com"
-      loadBalancerIPs: []
-        # - "X.X.X.X"
+      loadBalancerIPs: 
+        - "172.19.0.126"              # 노출되지 않도록 gitignore권장
         # - "Y.Y.Y.Y"
       loadBalancerNames: []
         # - apk-kafka-0.apk-kafka-headless.default.svc.cluster.local  # 172.X.X.X
@@ -97,15 +95,15 @@ ui4kafka:
   yamlApplicationConfig:
     kafka:
       clusters:
-        # - name: ReleaseName-kafka
-        #   bootstrapServers: ReleaseName-kafka-headless:9092
-        #   zookeeper: ReleaseName-zookeeper-headless:2181
-        #   kafkaConnect:
-        #     - name: connect                              # kafka_connect.connects에서 정의한 이름을 기술
-        #       address: http://ReleaseName-kafka-connect:8083
-        #   metrics:
-        #     port: 5556
-        #     type: JMX
+        - name: testbed-kafka
+          bootstrapServers: testbed-kafka-headless:9092
+          # zookeeper: ReleaseName-zookeeper-headless:2181
+          # kafkaConnect:
+          #   - name: connect                              # kafka_connect.connects에서 정의한 이름을 기술
+          #     address: http://ReleaseName-kafka-connect:8083
+          # metrics:
+          #   port: 5556
+          #   type: JMX
     auth:
       type: disabled
     management:
@@ -121,18 +119,4 @@ ui4kafka:
 ingress:
   enabled: true
   annotations:
-    # # minikube 설치용
-    # kubernetes.io/ingress.class: nginx
-
-    # # k3s 설치용
-    kubernetes.io/ingress.class: traefik
-
-    # # k3d 설치용
-    # ingress.kubernetes.io/ssl-redirect: "false"
-
-    # # AWS EKS 설치용
-    # kubernetes.io/ingress.class: alb
-    # alb.ingress.kubernetes.io/group.name: public
-    # alb.ingress.kubernetes.io/scheme: internet-facing
-    # alb.ingress.kubernetes.io/target-type: ip
-    # alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 9090}]'
+    kubernetes.io/ingress.class: traefik  # k3s default ingress controller
