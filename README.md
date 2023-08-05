@@ -68,3 +68,7 @@ kubectl delete pvc data-testbed-kafka-0
 - testbed.yaml
   - Kafka 로컬 접근: 9092
   - Kafka 외부 접근: 9094 or 9095
+
+- Dependency Charts 바로가기
+  - [bitnami/kafka](https://artifacthub.io/packages/helm/bitnami/kafka)
+  - [provectus/kafka-ui](https://artifacthub.io/packages/helm/kafka-ui/kafka-ui)
