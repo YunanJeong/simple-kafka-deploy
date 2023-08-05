@@ -4,8 +4,6 @@
 global:
   monitorDomain: test.wai
   imageRegistry: docker.io            # bitnami 계열 글로벌 
-  image:                              # grafana 계열 글로벌
-    registry: docker.io              
 
 kafka:
   # nodeSelector:                     # Pod 배치전략
@@ -87,7 +85,7 @@ k8dashboard:
 
 ui4kafka:
   enabled: true
-  image:  # 글로벌 적용 불가https://www.google.com/imgres?imgurl=https%3A%2F%2Fmblogthumb-phinf.pstatic.net%2FMjAyMTAxMjhfMjE4%2FMDAxNjExODAxMjIyMTE3.wvvJGWX_kGthBYwtKeNKodsGFKZXxMtn9rOaDYLH5qkg.LQhYzrL4HhtwX_sftjQaMVGcNib1RW3ZMbADmARUISsg.PNG.woorieyeswj%2F2.png%3Ftype%3Dw800&tbnid=i3cHlNLZWBYHLM&vet=12ahUKEwirrI6fwb-AAxUFt1YBHaq7AcsQMygBegUIARDSAQ..i&imgrefurl=https%3A%2F%2Fm.blog.naver.com%2Fwoorieyeswj%2F222222815039&docid=SrLboKfzcVRGtM&w=800&h=801&q=%EA%B4%91%EC%8B%9C%EC%A6%9D&ved=2ahUKEwirrI6fwb-AAxUFt1YBHaq7AcsQMygBegUIARDSAQ
+  image:  # 글로벌 적용 불가
     registry: docker.io
   yamlApplicationConfig:
     kafka:
