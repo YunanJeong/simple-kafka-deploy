@@ -4,6 +4,11 @@
 
 Kubernetes용 대시보드, Kafka, Kafka-ui만 포함한다. 다른 컴포넌트(Grafana, Streams, ...) 등을 추가할 시 별도 릴리즈로 배포하도록 하자.
 
+## Requirement
+
+- [K3s설치](https://docs.k3s.io/quick-start)
+- [Helm설치](https://helm.sh/docs/intro/install/)
+
 ## 사용법
 
 ### 수정 시
