@@ -63,7 +63,8 @@ kubectl delete pvc data-testbed-kafka-0
 ## 메모
 
 - 헬름차트 bitnami/kafka:23.0.7에서 보안설정이 없으면 파워쉘에서 Kafka에 네트워크 연결이 안될 수 있다. [참고](https://stackoverflow.com/questions/48603203/powershell-invoke-webrequest-throws-webcmdletresponseexception)
-  - 외부연결 테스트는 일반 cmd 등으로 수행하자.
+  - 윈도에선 일반 cmd를 사용한다.
+- 외부연결 테스트는 curl, kafkacat, kafka-topics.sh 등으로 확인
 
 - testbed.yaml
   - Kafka 로컬 접근: 9092
