@@ -6,8 +6,8 @@ Kubernetes용 대시보드, Kafka, Kafka-ui만 포함한다. 다른 컴포넌트
 
 ## Requirement
 
-- [K3s설치](https://docs.k3s.io/quick-start)
-- [Helm설치](https://helm.sh/docs/intro/install/)
+- [Install K3s](https://docs.k3s.io/quick-start)
+- [Install Helm](https://helm.sh/docs/intro/install/)
 
 ## 사용법
 
@@ -32,6 +32,16 @@ helm install testbed chartrepo/skafka-0.1.0.tgz -f values/testbed.yaml
 helm upgrade testbed chartrepo/skafka-0.1.0.tgz -f values/testbed.yaml
 ```
 
+### 삭제 시
+
+```sh
+# 릴리즈 삭제
+helm uninstall testbed
+
+# 과거 내역(PVC) 삭제
+kubectl delete pvc data-testbed-kafka-0
+```
+
 ## 구성
 
 ```sh
@@ -54,3 +64,7 @@ helm upgrade testbed chartrepo/skafka-0.1.0.tgz -f values/testbed.yaml
 
 - 헬름차트 bitnami/kafka:23.0.7에서 보안설정이 없으면 파워쉘에서 Kafka에 네트워크 연결이 안될 수 있다. [참고](https://stackoverflow.com/questions/48603203/powershell-invoke-webrequest-throws-webcmdletresponseexception)
   - 외부연결 테스트는 일반 cmd 등으로 수행하자.
+
+- testbed.yaml
+  - Kafka 로컬 접근: 9092
+  - Kafka 외부 접근: 9094 or 9095
