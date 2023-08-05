@@ -25,7 +25,7 @@ helm package skafka/
 
 ```shell
 # 첫 설치
-# helm install {ReleaseName} {chart archive} {custom config value}
+# helm install {ReleaseName} {chart archive} -f {custom config value}
 helm install testbed chartrepo/skafka-0.1.0.tgz -f values/testbed.yaml
 
 # 업데이트
