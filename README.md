@@ -2,7 +2,9 @@
 
 로컬테스트 등 용도로 가벼운 Kafka를 빠르게 배포하기 위한 Helm Chart
 
-Kubernetes용 대시보드, Kafka, Kafka-ui만 포함한다. 다른 컴포넌트(Grafana, Streams, ...) 등을 추가할 시 별도 릴리즈로 배포하도록 하자.
+Kubernetes용 대시보드, Kafka, Kafka-ui만 포함한다.
+
+다른 컴포넌트(Grafana, Streams, ...) 추가 시 별도 릴리즈로 배포하자.
 
 ## Requirement
 
