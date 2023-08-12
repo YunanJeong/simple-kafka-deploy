@@ -34,7 +34,7 @@ helm uninstall testbed
 kubectl delete pvc data-testbed-kafka-0
 ```
 
-### 수정 시
+## 차트 수정 시
 
 ```shell
 # dependency 다운로드 및 Chart.lock 최신화 (skafka 경로에서 실행)
