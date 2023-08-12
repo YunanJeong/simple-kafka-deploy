@@ -34,16 +34,6 @@ helm uninstall testbed
 kubectl delete pvc data-testbed-kafka-0
 ```
 
-## 차트 수정 시
-
-```shell
-# dependency 다운로드 및 Chart.lock 최신화 (skafka 경로에서 실행)
-helm dependency update
-
-# 차트를 아카이브 파일로 생성
-helm package skafka/
-```
-
 ## 접속법 (testbed.yaml 기준)
 
 ### Kafka 접근 포트
@@ -65,6 +55,23 @@ helm package skafka/
   X.X.X.X ui4kafka.test.wai
   X.X.X.X k8dashboard.docker.wai
   ```
+
+## testbed.yaml 수정 시
+
+```sh
+# 차트의 default value 참고
+helm show values chartrepo/skafka-0.1.0.tgz
+```
+
+## 차트 수정 시
+
+```shell
+# dependency 다운로드 및 Chart.lock 최신화 (skafka 경로에서 실행)
+helm dependency update
+
+# 차트를 아카이브 파일로 생성
+helm package skafka/
+```
 
 ## 구성
 
