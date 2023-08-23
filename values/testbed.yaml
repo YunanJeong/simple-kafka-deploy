@@ -83,6 +83,32 @@ k8dashboard:
     value: "ctrl"
     effect: "NoSchedule"
 
+connect:
+  replicaCount: 1
+  image:
+    repository: confluentinc/cp-kafka-connect  # registry 포함 표기 가능. 없으면 container runtime의 default
+    pullPolicy: IfNotPresent
+    tag: 7.2.2                                     
+  configMapPairs:
+    CONNECT_BOOTSTRAP_SERVERS: "{{ .Release.Name }}-kafka:9092"
+    CONNECT_REST_PORT: "8083"
+  extraVolumeMounts: []
+    # - name: plugin
+    #   mountPath: /opt/connectors/
+  extraVolumes: []
+    # - name: plugin
+    #   emptyDir: {}
+  initContainers: []
+    # - name: init-plugin
+    #   image: confluentinc/cp-kafka-connect:7.2.2
+    #   command:
+    #     - sh
+    #     - -c
+    #     - confluent-hub install mongodb/kafka-connect-mongodb:1.8.0 --no-prompt
+    #   volumeMounts:
+    #     - name: plugin
+    #       mountPath: /usr/share/confluent-hub-components
+
 ui4kafka:
   enabled: true
   image:  # 글로벌 적용 불가
@@ -91,11 +117,11 @@ ui4kafka:
     kafka:
       clusters:
         - name: testbed-kafka
-          bootstrapServers: testbed-kafka-headless:9092
+          bootstrapServers: "testbed-kafka-headless:9092"
           # zookeeper: ReleaseName-zookeeper-headless:2181
-          # kafkaConnect:
-          #   - name: connect                              # kafka_connect.connects에서 정의한 이름을 기술
-          #     address: http://ReleaseName-kafka-connect:8083
+          kafkaConnect:
+            - name: connect
+              address: http://testbed-connect:8083
           # metrics:
           #   port: 5556
           #   type: JMX
