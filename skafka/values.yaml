@@ -65,6 +65,35 @@ kafka:
     jmx:
       enabled: false
 
+connect:
+  kafka:
+    create: false
+  schema-registry:
+    create: false
+  replicaCount: 1
+  image:
+    repository: confluentinc/cp-kafka-connect
+    pullPolicy: IfNotPresent
+    tag: ""  # 7.2.2
+  configMapPairs:
+    CONNECT_BOOTSTRAP_SERVERS: "{{ .Release.Name }}-kafka:9092"
+    CONNECT_REST_PORT: "8083"
+  extraVolumeMounts: []
+    # - name: plugin
+    #   mountPath: /usr/share/confluent-hub-components
+  extraVolumes: []
+    # - name: plugin
+    #   emptyDir: {}
+  initContainers: []
+    # - name: init-plugin
+    #   image: confluentinc/cp-kafka-connect:7.2.2
+    #   command:
+    #     - sh
+    #     - -c
+    #     - confluent-hub install mongodb/kafka-connect-mongodb:1.8.0 --no-prompt
+    #   volumeMounts:
+    #     - name: plugin
+    #       mountPath: /usr/share/confluent-hub-components
 
 k8dashboard:
   enabled: true
