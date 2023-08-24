@@ -18,10 +18,10 @@ Kubernetes용 대시보드, Kafka, Kafka-ui만 포함한다.
 ```shell
 # 첫 설치
 # helm install {ReleaseName} {chart archive} -f {custom config value}
-helm install testbed chartrepo/skafka-0.1.0.tgz -f values/testbed.yaml
+helm install testbed chartrepo/skafka-1.0.0.tgz -f values/testbed.yaml
 
 # 업데이트
-helm upgrade testbed chartrepo/skafka-0.1.0.tgz -f values/testbed.yaml
+helm upgrade testbed chartrepo/skafka-1.0.0.tgz -f values/testbed.yaml
 ```
 
 ### 삭제 시
@@ -60,7 +60,7 @@ kubectl delete pvc data-testbed-kafka-0
 
 ```sh
 # 차트의 default value 참고
-helm show values chartrepo/skafka-0.1.0.tgz
+helm show values chartrepo/skafka-1.0.0.tgz
 ```
 
 ## 차트 수정 시
@@ -80,7 +80,8 @@ helm package skafka/
 ├── LICENSE
 ├── README.md
 ├── chartrepo/            # 헬름 차트 아카이브 파일
-│   └── skafka-0.1.0.tgz
+│   ├── skafka-0.1.0.tgz   # 구버전: kafka-connect 미포함
+│   └── skafka-1.0.0.tgz   # kafka-connect 포함
 ├── skafka/               # 헬름 차트 디렉토리
 │   ├── Chart.lock         # dependency 버전 확정 내용    
 │   ├── Chart.yaml         # 차트 파일(차트버전,앱버전,dependency버전 관리)
