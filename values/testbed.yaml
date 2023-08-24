@@ -63,27 +63,8 @@ kafka:
     jmx:
       enabled: false
 
-
-k8dashboard:
-  enabled: true
-  image:  # 글로벌 적용 불가
-    registry: docker.io
-  protocolHttp: true 
-  service:
-    externalPort: 8443
-  serviceAccount:
-    name: k8dash-admin
-  extraArgs:
-    - --token-ttl=86400
-    - --enable-skip-login 
-    - --enable-insecure-login
-  tolerations:
-  - key: type
-    operator: "Equal"
-    value: "ctrl"
-    effect: "NoSchedule"
-
 connect:
+  enabled: true
   replicaCount: 1
   image:
     repository: confluentinc/cp-kafka-connect  # registry 포함 표기 가능. 없으면 container runtime의 default
@@ -111,6 +92,26 @@ connect:
       volumeMounts:
         - name: plugin
           mountPath: /usr/share/confluent-hub-components
+
+k8dashboard:
+  enabled: true
+  image:  # 글로벌 적용 불가
+    registry: docker.io
+  protocolHttp: true 
+  service:
+    externalPort: 8443
+  serviceAccount:
+    name: k8dash-admin
+  extraArgs:
+    - --token-ttl=86400
+    - --enable-skip-login 
+    - --enable-insecure-login
+  tolerations:
+  - key: type
+    operator: "Equal"
+    value: "ctrl"
+    effect: "NoSchedule"
+
 
 ui4kafka:
   enabled: true

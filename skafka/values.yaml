@@ -66,6 +66,7 @@ kafka:
       enabled: false
 
 connect:
+  enabled: true
   kafka:
     create: false
   schema-registry:
