@@ -92,22 +92,25 @@ connect:
   configMapPairs:
     CONNECT_BOOTSTRAP_SERVERS: "{{ .Release.Name }}-kafka:9092"
     CONNECT_REST_PORT: "8083"
-  extraVolumeMounts: []
-    # - name: plugin
-    #   mountPath: /opt/connectors/
-  extraVolumes: []
-    # - name: plugin
-    #   emptyDir: {}
-  initContainers: []
-    # - name: init-plugin
-    #   image: confluentinc/cp-kafka-connect:7.2.2
-    #   command:
-    #     - sh
-    #     - -c
-    #     - confluent-hub install mongodb/kafka-connect-mongodb:1.8.0 --no-prompt
-    #   volumeMounts:
-    #     - name: plugin
-    #       mountPath: /usr/share/confluent-hub-components
+  extraVolumeMounts: # []
+    - name: plugin
+      mountPath: /usr/share/confluent-hub-components
+  extraVolumes: # []
+    - name: plugin
+      emptyDir: {}
+  initContainers: # []
+    - name: init-plugin
+      image: confluentinc/cp-kafka-connect:7.2.2  # curl, wget, tar, confluent-hub 가능
+      command:
+        - sh
+        - -c
+        - |
+          confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:10.7.4
+          confluent-hub install --no-prompt confluentinc/kafka-connect-s3:10.5.4
+          wget -P /usr/share/confluent-hub-components/confluentinc-kafka-connect-s3/ https://github.com/YunanJeong/kafka-connect-s3-without-topicname/releases/download/v10.5.0%2Bv1.0.0/topicless-timebasedpartitioner.jar
+      volumeMounts:
+        - name: plugin
+          mountPath: /usr/share/confluent-hub-components
 
 ui4kafka:
   enabled: true
