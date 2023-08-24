@@ -99,4 +99,5 @@ helm package skafka/
 
 - Dependency Charts 바로가기
   - [bitnami/kafka](https://artifacthub.io/packages/helm/bitnami/kafka)
+  - [licenseware/kafka-connect](https://artifacthub.io/packages/helm/licenseware/kafka-connect)
   - [provectus/kafka-ui](https://artifacthub.io/packages/helm/kafka-ui/kafka-ui)
