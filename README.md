@@ -2,7 +2,7 @@
 
 로컬테스트 등 용도로 가벼운 Kafka를 빠르게 배포하기 위한 Helm Chart
 
-Kubernetes용 대시보드, Kafka, Kafka-ui만 포함한다.
+Kubernetes용 대시보드, Kafka, Kafka-ui, Kafka-connect를 포함한다.
 
 다른 컴포넌트(Grafana, Streams, ...) 추가 시 별도 릴리즈로 배포하자.
 
@@ -53,7 +53,7 @@ kubectl delete pvc data-testbed-kafka-0
   # 윈도우 C:\Windows\System32\drivers\etc\hosts
   # X.X.X.X는 접속대상 서버의 IP
   X.X.X.X ui4kafka.test.wai
-  X.X.X.X k8dashboard.docker.wai
+  X.X.X.X k8dashboard.test.wai
   ```
 
 ## testbed.yaml 수정 시
