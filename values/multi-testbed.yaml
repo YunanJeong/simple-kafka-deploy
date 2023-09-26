@@ -23,7 +23,7 @@ kafka:
       publishNotReadyAddresses: true  # 23.0.5 버전 멀티클러스터가 안켜지는 버그 대응
 
   externalAccess:
-    enabled: false
+    enabled: true
     autoDiscovery:
       enabled: true
       image:
@@ -38,11 +38,12 @@ kafka:
         # - testbed-kafka-0.testbed-kafka-headless.default.svc.cluster.local  # 172.X.X.X
         # - testbed-kafka-1.testbed-kafka-headless.default.svc.cluster.local  # DNS서버 or /etc/hosts 에 추가 필요
 
-  advertisedListeners:  # []
-    # - "INTERNAL://:9094"
-    # - "CLIENT://X.X.X.X:9092"
-    - "EXTERNAL://:9092"
-
+  # advertisedListeners:  # []
+  #   - "INTERNAL://:9094"
+  #   - "CLIENT://X.X.X.X:9092"
+  #   - "EXTERNAL://X.X.X.X:9095"
+  serviceAccount:
+    create: true
   rbac: 
     create: true
 
