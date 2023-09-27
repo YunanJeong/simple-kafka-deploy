@@ -1,0 +1,195 @@
+# helm install시 사용되는 config value는 노출되지 않도록 gitignore권장
+# 이 파일은 로컬테스트용이라 샘플삼아 그냥 업로드한다.
+
+global:
+  monitorDomain: test.wai
+  imageRegistry: docker.io            # bitnami 계열 글로벌 
+
+kafka:
+  listeners:
+    extraListeners: []
+    advertisedListeners: ""
+
+  # sals:
+  # tls: 
+  extraEnvVars: []        # 환경변수 "추가"
+  extraEnvVarsCM: ''
+  extraEnvVarsSecret: ''
+  extraVolumes: []
+  extraVolumeMounts: []
+  sidecars: []
+  initContainers: []
+  
+  controller:
+    replicaCount: 3
+    affinity: {}
+    nodeSelector: {}
+    persistence:
+      size: 8Gi
+    logPersistence:
+      enabled: false
+      size: 8Gi
+      mountPath: /opt/bitnami/kafka/logs
+
+
+  broker:
+    replicaCount: 3
+    zookeeperMigrationMode: false  # true시, 주키퍼,크래프트 동시실행가능(마이그레이션목적)
+    extraEnvVars: []  # Kafka Pod에 환경변수 "추가"
+    affinity: {}
+    nodeSelector: {}
+    persistence:
+      size: 8Gi  # /bitnami/kafka, pvc data-{rel}-kafka-broker-{num}, 디스크 가용량의 70~80% 권장
+    logPersistence:
+      enabled: false
+      size: 8Gi  # /opt/bitnami/kafka/logs
+  
+  service:
+    type: LoadBalancer
+    ports:
+      external: 9095                  # "tcp-external"
+    loadbalancerIP: ''
+    
+  externalAccess:
+    enabled: true
+    autoDiscovery:
+      enabled: true
+      image:
+        registry: docker.io           # 비인터넷환경 => 프록시registry를 쓰거나, autoDiscovery대신 loadBalancerIP 명시    
+    broker:
+      service:
+        ports:
+          external: 9094                # 네트워크상 실제 사용가능한 Port("tcp-kafka")
+        loadBalancerIPs: []
+          # - "X.X.X.X"                 # 노출되지 않도록 gitignore권장
+          # - "Y.Y.Y.Y"
+        loadBalancerNames: []
+          # - testbed-kafka-0.testbed-kafka-headless.default.svc.cluster.local  # 172.X.X.X
+          # - testbed-kafka-1.testbed-kafka-headless.default.svc.cluster.local  # DNS서버 or /etc/hosts 에 추가 필요
+  networkPolicy:
+    enabled: false
+  volumePermissions:
+    enabled: false
+  serviceAccount:
+    create: true
+  rbac: 
+    create: true
+
+  metrics:
+    kafka:          # bitnami/kafka-exporter
+      enabled: false
+      image:
+        registry: docker.io  
+      containerPorts:
+        metrics: 9308
+    jmx:            # bitnami/jmx-exporter
+      enabled: false
+      kafkaJmxPort: 5555
+      image:
+        registry: docker.io
+      containerPorts:
+        metrics: 5556
+      service:
+        ports:
+          metrics: 5556
+    serviceMonitor: # bitnami/prometheus-operator
+      enabled: false
+    prometheusRule:
+      emabled: false
+
+  provisioning:
+    enabled: false
+    numPartitions: 1
+    replicationFactor: 1
+  kraft:
+    enabled: true
+    clusterId: ""
+  zookeeper:
+    enabled: false
+    replicaCount: 1
+    persistence:
+      size: 8Gi  # 충분 
+
+
+connect:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: confluentinc/cp-kafka-connect  # registry 포함 표기 가능. 없으면 container runtime의 default
+    pullPolicy: IfNotPresent
+    tag: 7.2.2                                     
+  configMapPairs:
+    CONNECT_BOOTSTRAP_SERVERS: "{{ .Release.Name }}-kafka:9092"
+    CONNECT_REST_PORT: "8083"
+  extraVolumeMounts: # []
+    - name: plugin
+      mountPath: /usr/share/confluent-hub-components
+  extraVolumes: # []
+    - name: plugin
+      emptyDir: {}
+  initContainers: # []
+    - name: init-plugin
+      image: confluentinc/cp-kafka-connect:7.2.2  # curl, wget, tar, confluent-hub 가능
+      command:
+        - sh
+        - -c
+        - |
+          confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:10.7.4
+          confluent-hub install --no-prompt confluentinc/kafka-connect-s3:10.5.4
+          wget -P /usr/share/confluent-hub-components/confluentinc-kafka-connect-s3/ https://github.com/YunanJeong/kafka-connect-s3-without-topicname/releases/download/v10.5.0%2Bv1.0.0/topicless-timebasedpartitioner.jar
+      volumeMounts:
+        - name: plugin
+          mountPath: /usr/share/confluent-hub-components
+
+k8dashboard:
+  enabled: true
+  image:  # 글로벌 적용 불가
+    registry: docker.io
+  protocolHttp: true 
+  service:
+    externalPort: 8443
+  serviceAccount:
+    name: k8dash-admin
+  extraArgs:
+    - --token-ttl=86400
+    - --enable-skip-login 
+    - --enable-insecure-login
+  tolerations:
+  - key: type
+    operator: "Equal"
+    value: "ctrl"
+    effect: "NoSchedule"
+
+
+ui4kafka:
+  enabled: true
+  image:  # 글로벌 적용 불가
+    registry: docker.io
+  yamlApplicationConfig:
+    kafka:
+      clusters:
+        - name: testbed-kafka
+          bootstrapServers: "testbed-kafka-headless:9092"
+          # zookeeper: ReleaseName-zookeeper-headless:2181
+          kafkaConnect:
+            - name: connect
+              address: http://testbed-connect:8083
+          # metrics:
+          #   port: 5556
+          #   type: JMX
+    auth:
+      type: disabled
+    management:
+      health:
+        ldap:
+          enabled: false
+  tolerations:
+    - key: type
+      operator: "Equal"
+      value: "ctrl"
+      effect: "NoSchedule"
+
+ingress:
+  enabled: true
+  annotations:
+    spec.ingressClassName: traefik  # k3s default ingress controller
