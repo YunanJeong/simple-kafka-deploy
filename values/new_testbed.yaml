@@ -7,6 +7,15 @@ global:
 
 kafka:
   listeners:
+    # https://github.com/bitnami/charts/issues/19128
+    client:
+      protocol: PLAINTEXT  # SASL_PLAINTEXT
+    controller:
+      protocol: PLAINTEXT  # SASL_PLAINTEXT
+    interbroker:
+      protocol: PLAINTEXT  # SASL_PLAINTEXT
+    external:
+      protocol: PLAINTEXT  # SASL_PLAINTEXT
     extraListeners: []
     advertisedListeners: ""
 
@@ -31,7 +40,6 @@ kafka:
       size: 8Gi
       mountPath: /opt/bitnami/kafka/logs
 
-
   broker:
     replicaCount: 3
     zookeeperMigrationMode: false  # true시, 주키퍼,크래프트 동시실행가능(마이그레이션목적)
@@ -47,7 +55,8 @@ kafka:
   service:
     type: LoadBalancer
     ports:
-      external: 9095                  # "tcp-external"
+      client: 9092                    # "tcp-client"   (allows access from localhost machine)
+      external: 9095                  # "tcp-external" (requires externalAccess.enabled=true)
     loadbalancerIP: ''
     
   externalAccess:
@@ -64,8 +73,8 @@ kafka:
           # - "X.X.X.X"                 # 노출되지 않도록 gitignore권장
           # - "Y.Y.Y.Y"
         loadBalancerNames: []
-          # - testbed-kafka-0.testbed-kafka-headless.default.svc.cluster.local  # 172.X.X.X
-          # - testbed-kafka-1.testbed-kafka-headless.default.svc.cluster.local  # DNS서버 or /etc/hosts 에 추가 필요
+          # - testbed-kafka-0.testbed-kafka-broker-headless.default.svc.cluster.local  # 172.X.X.X
+          # - testbed-kafka-1.testbed-kafka-broker-headless.default.svc.cluster.local  # DNS서버 or /etc/hosts 에 추가 필요
   networkPolicy:
     enabled: false
   volumePermissions:
@@ -106,7 +115,7 @@ kafka:
     clusterId: ""
   zookeeper:
     enabled: false
-    replicaCount: 1
+    replicaCount: 3
     persistence:
       size: 8Gi  # 충분 
 
@@ -119,7 +128,7 @@ connect:
     pullPolicy: IfNotPresent
     tag: 7.2.2                                     
   configMapPairs:
-    CONNECT_BOOTSTRAP_SERVERS: "{{ .Release.Name }}-kafka:9092"
+    CONNECT_BOOTSTRAP_SERVERS: "{{ .Release.Name }}-kafka-controller-headless:9092"
     CONNECT_REST_PORT: "8083"
   extraVolumeMounts: # []
     - name: plugin
@@ -169,7 +178,7 @@ ui4kafka:
     kafka:
       clusters:
         - name: testbed-kafka
-          bootstrapServers: "testbed-kafka-headless:9092"
+          bootstrapServers: "testbed-kafka-broker-headless:9092"
           # zookeeper: ReleaseName-zookeeper-headless:2181
           kafkaConnect:
             - name: connect
