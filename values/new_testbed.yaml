@@ -65,6 +65,9 @@ kafka:
       enabled: true
       image:
         registry: docker.io           # 비인터넷환경 => 프록시registry를 쓰거나, autoDiscovery대신 loadBalancerIP 명시    
+    controller:
+      service:
+        publishNotReadyAddresses: true
     broker:
       service:
         ports:
@@ -75,6 +78,7 @@ kafka:
         loadBalancerNames: []
           # - testbed-kafka-0.testbed-kafka-broker-headless.default.svc.cluster.local  # 172.X.X.X
           # - testbed-kafka-1.testbed-kafka-broker-headless.default.svc.cluster.local  # DNS서버 or /etc/hosts 에 추가 필요
+        publishNotReadyAddresses: true
   networkPolicy:
     enabled: false
   volumePermissions:
