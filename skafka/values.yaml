@@ -47,13 +47,13 @@ kafka:
       size: 8Gi  # /opt/bitnami/kafka/logs
   
   service:
-    type: LoadBalancer
+    type: ClusterIP
     ports:
       external: 9095                  # "tcp-external"
     loadbalancerIP: ''
     
   externalAccess:
-    enabled: true
+    enabled: false
     autoDiscovery:
       enabled: true
       image:
@@ -103,7 +103,6 @@ kafka:
     enabled: false
     numPartitions: 1
     replicationFactor: 1
-    
   kraft:
     enabled: true
     clusterId: ""
@@ -112,8 +111,6 @@ kafka:
     replicaCount: 1
     persistence:
       size: 8Gi  # 충분 
-
-
 
 connect:
   enabled: true
