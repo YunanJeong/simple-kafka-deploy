@@ -71,10 +71,10 @@ kafka:
         registry: docker.io           # 비인터넷환경 => 프록시registry를 쓰거나, autoDiscovery대신 loadBalancerIP 명시    
     controller:
       service:
-        loadBalancerIPs: # []
-          - "172.31.13.100"                 # 노출되지 않도록 gitignore권장
-          - "172.31.13.179"
-          - "172.31.15.224"
+        loadBalancerIPs: []
+          # - "172.31.13.100"                 # 노출되지 않도록 gitignore권장
+          # - "172.31.13.179"
+          # - "172.31.15.224"
     #     publishNotReadyAddresses: true
     broker:
       service:
