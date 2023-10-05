@@ -73,8 +73,8 @@ kafka:
       service:
         loadBalancerIPs:
           - "172.31.13.100"                 # 노출되지 않도록 gitignore권장
-          # - "172.31.13.179"
-          # - "172.31.15.224"
+          - "172.31.13.100"
+          - "172.31.15.100"
     #     publishNotReadyAddresses: true
     broker:
       service:
