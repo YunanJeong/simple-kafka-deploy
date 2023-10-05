@@ -16,9 +16,8 @@ kafka:
       protocol: PLAINTEXT  # SASL_PLAINTEXT
     external:
       protocol: PLAINTEXT  # SASL_PLAINTEXT
-    extraListeners: # []
-      - EXTERNAL://172.31.13.100:9092
-    advertisedListeners: ""
+    extraListeners: []
+    advertisedListeners: "EXTERNAL://172.31.13.100:9095"
 
   # sals:
   # tls: 
