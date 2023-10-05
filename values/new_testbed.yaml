@@ -31,6 +31,9 @@ kafka:
   
   controller:
     replicaCount: 3
+    controllerOnly: false
+    zookeeperMigrationMode: false  # true시, 주키퍼,크래프트 동시실행가능(마이그레이션목적)
+    extraEnvVars: []               # Kafka Pod에 환경변수 "추가"
     affinity: {}
     nodeSelector: {}
     persistence:
@@ -41,16 +44,17 @@ kafka:
       mountPath: /opt/bitnami/kafka/logs
 
   broker:
-    replicaCount: 3
+    replicaCount: 0
     zookeeperMigrationMode: false  # true시, 주키퍼,크래프트 동시실행가능(마이그레이션목적)
-    extraEnvVars: []  # Kafka Pod에 환경변수 "추가"
+    extraEnvVars: []               # Kafka Pod에 환경변수 "추가"
     affinity: {}
     nodeSelector: {}
     persistence:
       size: 8Gi  # /bitnami/kafka, pvc data-{rel}-kafka-broker-{num}, 디스크 가용량의 70~80% 권장
     logPersistence:
       enabled: false
-      size: 8Gi  # /opt/bitnami/kafka/logs
+      size: 8Gi
+      mountPath: /opt/bitnami/kafka/logs
   
   service:
     type: LoadBalancer
@@ -65,9 +69,9 @@ kafka:
       enabled: true
       image:
         registry: docker.io           # 비인터넷환경 => 프록시registry를 쓰거나, autoDiscovery대신 loadBalancerIP 명시    
-    controller:
-      service:
-        publishNotReadyAddresses: true
+    # controller:
+    #   service:
+    #     publishNotReadyAddresses: true
     broker:
       service:
         ports:
@@ -78,7 +82,7 @@ kafka:
         loadBalancerNames: []
           # - testbed-kafka-0.testbed-kafka-broker-headless.default.svc.cluster.local  # 172.X.X.X
           # - testbed-kafka-1.testbed-kafka-broker-headless.default.svc.cluster.local  # DNS서버 or /etc/hosts 에 추가 필요
-        publishNotReadyAddresses: true
+        # publishNotReadyAddresses: true
   networkPolicy:
     enabled: false
   volumePermissions:
@@ -125,14 +129,14 @@ kafka:
 
 
 connect:
-  enabled: true
+  enabled: false
   replicaCount: 1
   image:
     repository: confluentinc/cp-kafka-connect  # registry 포함 표기 가능. 없으면 container runtime의 default
     pullPolicy: IfNotPresent
     tag: 7.2.2                                     
   configMapPairs:
-    CONNECT_BOOTSTRAP_SERVERS: "{{ .Release.Name }}-kafka-controller-headless:9092"
+    CONNECT_BOOTSTRAP_SERVERS: "{{ .Release.Name }}-kafka:9092"
     CONNECT_REST_PORT: "8083"
   extraVolumeMounts: # []
     - name: plugin
@@ -182,7 +186,7 @@ ui4kafka:
     kafka:
       clusters:
         - name: testbed-kafka
-          bootstrapServers: "testbed-kafka-broker-headless:9092"
+          bootstrapServers: "testbed-kafka:9092"
           # zookeeper: ReleaseName-zookeeper-headless:2181
           kafkaConnect:
             - name: connect
