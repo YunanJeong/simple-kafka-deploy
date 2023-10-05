@@ -57,14 +57,14 @@ kafka:
       mountPath: /opt/bitnami/kafka/logs
   
   service:
-    type: LoadBalancer
+    type: NodePort
     ports:
       client: 9092                    # "tcp-client"   (allows access from localhost machine)
       external: 9095                  # "tcp-external" (requires externalAccess.enabled=true)
     loadbalancerIP: ''
     
   externalAccess:
-    enabled: true
+    enabled: false
     autoDiscovery:
       enabled: false
       image:
