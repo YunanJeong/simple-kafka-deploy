@@ -1,11 +1,9 @@
-# Default values for skafka.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
+# helm install시 사용되는 config value는 노출되지 않도록 gitignore권장
+# 이 파일은 로컬테스트용이라 샘플삼아 그냥 업로드한다.
 
 global:
   monitorDomain: test.wai
-  imageRegistry: docker.io              # bitnami 계열 글로벌
+  imageRegistry: docker.io            # bitnami 계열 글로벌 
 
 kafka:
   listeners:
@@ -55,18 +53,21 @@ kafka:
       size: 8Gi  # /opt/bitnami/kafka/logs
   
   service:
-    type: ClusterIP
+    type: LoadBalancer
     ports:
       client: 9092                    # "tcp-client"   (allows access from localhost machine)
       external: 9095                  # "tcp-external" (requires externalAccess.enabled=true)
     loadbalancerIP: ''
     
   externalAccess:
-    enabled: false
+    enabled: true
     autoDiscovery:
       enabled: true
       image:
         registry: docker.io           # 비인터넷환경 => 프록시registry를 쓰거나, autoDiscovery대신 loadBalancerIP 명시    
+    controller:
+      service:
+        publishNotReadyAddresses: true
     broker:
       service:
         ports:
@@ -77,6 +78,7 @@ kafka:
         loadBalancerNames: []
           # - testbed-kafka-0.testbed-kafka-broker-headless.default.svc.cluster.local  # 172.X.X.X
           # - testbed-kafka-1.testbed-kafka-broker-headless.default.svc.cluster.local  # DNS서버 or /etc/hosts 에 추가 필요
+        publishNotReadyAddresses: true
   networkPolicy:
     enabled: false
   volumePermissions:
@@ -124,37 +126,33 @@ kafka:
 
 connect:
   enabled: true
-  kafka:
-    create: false
-  schema-registry:
-    create: false
   replicaCount: 1
   image:
-    repository: confluentinc/cp-kafka-connect
+    repository: confluentinc/cp-kafka-connect  # registry 포함 표기 가능. 없으면 container runtime의 default
     pullPolicy: IfNotPresent
-    tag: ""  # 7.2.2
+    tag: 7.2.2                                     
   configMapPairs:
-    CONNECT_BOOTSTRAP_SERVERS: "{{ .Release.Name }}-kafka:9092"
+    CONNECT_BOOTSTRAP_SERVERS: "{{ .Release.Name }}-kafka-controller-headless:9092"
     CONNECT_REST_PORT: "8083"
-  extraVolumeMounts: []
-    # - name: plugin
-    #   mountPath: /usr/share/confluent-hub-components
-  extraVolumes: []
-    # - name: plugin
-    #   emptyDir: {}
-  initContainers: []
-    # - name: init-plugin
-    #   image: confluentinc/cp-kafka-connect:7.2.2
-    #   command:
-    #     - sh
-    #     - -c
-    #     - |
-    #       confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:10.7.4
-    #       confluent-hub install --no-prompt confluentinc/kafka-connect-s3:10.5.4
-    #       wget -P /usr/share/confluent-hub-components/confluentinc-kafka-connect-s3/ https://github.com/YunanJeong/kafka-connect-s3-without-topicname/releases/download/v10.5.0%2Bv1.0.0/topicless-timebasedpartitioner.jar
-    #   volumeMounts:
-    #     - name: plugin
-    #       mountPath: /usr/share/confluent-hub-components
+  extraVolumeMounts: # []
+    - name: plugin
+      mountPath: /usr/share/confluent-hub-components
+  extraVolumes: # []
+    - name: plugin
+      emptyDir: {}
+  initContainers: # []
+    - name: init-plugin
+      image: confluentinc/cp-kafka-connect:7.2.2  # curl, wget, tar, confluent-hub 가능
+      command:
+        - sh
+        - -c
+        - |
+          confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:10.7.4
+          confluent-hub install --no-prompt confluentinc/kafka-connect-s3:10.5.4
+          wget -P /usr/share/confluent-hub-components/confluentinc-kafka-connect-s3/ https://github.com/YunanJeong/kafka-connect-s3-without-topicname/releases/download/v10.5.0%2Bv1.0.0/topicless-timebasedpartitioner.jar
+      volumeMounts:
+        - name: plugin
+          mountPath: /usr/share/confluent-hub-components
 
 k8dashboard:
   enabled: true
@@ -175,6 +173,7 @@ k8dashboard:
     value: "ctrl"
     effect: "NoSchedule"
 
+
 ui4kafka:
   enabled: true
   image:  # 글로벌 적용 불가
@@ -182,15 +181,15 @@ ui4kafka:
   yamlApplicationConfig:
     kafka:
       clusters:
-        # - name: ReleaseName-kafka
-        #   bootstrapServers: ReleaseName-kafka-headless:9092
-        #   zookeeper: ReleaseName-zookeeper-headless:2181
-        #   kafkaConnect:
-        #     - name: connect                              # kafka_connect.connects에서 정의한 이름을 기술
-        #       address: http://ReleaseName-kafka-connect:8083
-        #   metrics:
-        #     port: 5556
-        #     type: JMX
+        - name: testbed-kafka
+          bootstrapServers: "testbed-kafka-broker-headless:9092"
+          # zookeeper: ReleaseName-zookeeper-headless:2181
+          kafkaConnect:
+            - name: connect
+              address: http://testbed-connect:8083
+          # metrics:
+          #   port: 5556
+          #   type: JMX
     auth:
       type: disabled
     management:
@@ -206,22 +205,4 @@ ui4kafka:
 ingress:
   enabled: true
   annotations:
-    spec.ingressClassName: traefik
-    
-    # kubernetes.io/ingress.class is deprecated
-    
-    # # minikube 설치용
-    # kubernetes.io/ingress.class: nginx
-
-    # # k3s 설치용
-    # kubernetes.io/ingress.class: traefik
-
-    # # k3d 설치용
-    # ingress.kubernetes.io/ssl-redirect: "false"
-
-    # # AWS EKS 설치용
-    # kubernetes.io/ingress.class: alb
-    # alb.ingress.kubernetes.io/group.name: public
-    # alb.ingress.kubernetes.io/scheme: internet-facing
-    # alb.ingress.kubernetes.io/target-type: ip
-    # alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 9090}]'
+    spec.ingressClassName: traefik  # k3s default ingress controller
