@@ -76,9 +76,10 @@ kafka:
       service:
         ports:
           external: 9094                # 네트워크상 실제 사용가능한 Port("tcp-kafka")
-        loadBalancerIPs: []
-          # - "X.X.X.X"                 # 노출되지 않도록 gitignore권장
-          # - "Y.Y.Y.Y"
+        loadBalancerIPs: # []
+          - "172.31.13.100"                 # 노출되지 않도록 gitignore권장
+          - "172.31.13.179"
+          - "172.31.15.224"
         loadBalancerNames: []
           # - testbed-kafka-0.testbed-kafka-broker-headless.default.svc.cluster.local  # 172.X.X.X
           # - testbed-kafka-1.testbed-kafka-broker-headless.default.svc.cluster.local  # DNS서버 or /etc/hosts 에 추가 필요
