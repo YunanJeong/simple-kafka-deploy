@@ -17,7 +17,7 @@ kafka:
     external:
       protocol: PLAINTEXT  # SASL_PLAINTEXT
     extraListeners: []
-    advertisedListeners: ""
+    # advertisedListeners: "EXTERNAL://172.19.0.126:30003,CLIENT://test-kafka-controller-0.test-kafka-controller-headless.default.svc.cluster.local:9092,INTERNAL://test-kafka-controller-0.test-kafka-controller-headless.default.svc.cluster.local:9094"
 
   # sals:
   # tls: 
@@ -79,11 +79,15 @@ kafka:
     controller:
       service:
         type: NodePort
-        nodePorts: [30003, 30004, 30005]  # nodeport 사용시 EXTERNAL용 advertisedListener로 공인IP가 자동등록된다.
+        ports:
+          external: 9094
         loadBalancerIPs:
           - "172.31.13.100"               
           - "172.31.13.100"
           - "172.31.15.100"
+        nodePorts: [30003, 30004, 30005]  # nodeport 사용, externalIP 미사용시 EXTERNAL용 advertisedListener로 {공인IP:nodeport}가 자동등록된다.
+        externalIPs: [172.19.0.126, 172.19.0.126, 172.19.0.126]
+
     #     publishNotReadyAddresses: true
     broker:
       service:
