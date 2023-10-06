@@ -37,7 +37,9 @@ kafka:
     affinity: {}
     nodeSelector: {}
     persistence:
+      enabled: false
       size: 8Gi
+      mountPath: /bitnami/kafka
     logPersistence:
       enabled: false
       size: 8Gi
@@ -50,38 +52,46 @@ kafka:
     affinity: {}
     nodeSelector: {}
     persistence:
-      size: 8Gi  # /bitnami/kafka, pvc data-{rel}-kafka-broker-{num}, 디스크 가용량의 70~80% 권장
+      enabled: false
+      size: 8Gi  # pvc, 디스크 가용량의 70~80% 권장
+      mountPath: /bitnami/kafka
     logPersistence:
       enabled: false
       size: 8Gi
       mountPath: /opt/bitnami/kafka/logs
   
   service:
-    type: NodePort
+    type: LoadBalancer
     ports:
       client: 9092                    # "tcp-client"   (allows access from localhost machine)
       external: 9095                  # "tcp-external" (requires externalAccess.enabled=true)
+    nodePorts:
+      client: 30001   # ''
+      external: 30002 # ''
     loadbalancerIP: ''
     
   externalAccess:
-    enabled: false
+    enabled: true
     autoDiscovery:
       enabled: false
       image:
         registry: docker.io           # 비인터넷환경 => 프록시registry를 쓰거나, autoDiscovery대신 loadBalancerIP 명시    
     controller:
       service:
+        type: NodePort
+        nodePorts: [30003, 30004, 30005]  # nodeport 사용시 EXTERNAL용 advertisedListener로 공인IP가 자동등록된다.
         loadBalancerIPs:
-          - "172.31.13.100"                 # 노출되지 않도록 gitignore권장
+          - "172.31.13.100"               
           - "172.31.13.100"
           - "172.31.15.100"
     #     publishNotReadyAddresses: true
     broker:
       service:
+        type: LoadBalancer
         ports:
           external: 9094                # 네트워크상 실제 사용가능한 Port("tcp-kafka")
         loadBalancerIPs: []
-          # - "X.X.X.X"                 # 노출되지 않도록 gitignore권장
+          # - "X.X.X.X"                 
           # - "Y.Y.Y.Y"
         loadBalancerNames: []
           # - testbed-kafka-0.testbed-kafka-broker-headless.default.svc.cluster.local  # 172.X.X.X
@@ -133,7 +143,7 @@ kafka:
 
 
 connect:
-  enabled: true
+  enabled: false
   replicaCount: 1
   image:
     repository: confluentinc/cp-kafka-connect  # registry 포함 표기 가능. 없으면 container runtime의 default
