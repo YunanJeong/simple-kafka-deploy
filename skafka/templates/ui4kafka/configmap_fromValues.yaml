@@ -1,0 +1,11 @@
+{{- if .Values.ui4kafka.myYamlApplicationConfig -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: skafka-ui-config
+  labels:
+    {{- include "skafka.labels" . | nindent 4 }}
+data:
+  myconfig.yml: |-
+    {{- tpl (toYaml .Values.ui4kafka.myYamlApplicationConfig) $ | nindent 4}}
+{{ end }}

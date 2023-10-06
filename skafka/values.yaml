@@ -179,24 +179,29 @@ ui4kafka:
   enabled: true
   image:  # 글로벌 적용 불가
     registry: docker.io
-  yamlApplicationConfig:
+  yamlApplicationConfig: false  # warning 메시지 발생하지만 괜찮음. # 아래서 Helm 내장객체인 {{ .Release.Name }} 사용하려면 false 설정필요
+  myYamlApplicationConfig:
     kafka:
       clusters:
-        # - name: ReleaseName-kafka
-        #   bootstrapServers: ReleaseName-kafka-headless:9092
-        #   zookeeper: ReleaseName-zookeeper-headless:2181
-        #   kafkaConnect:
-        #     - name: connect                              # kafka_connect.connects에서 정의한 이름을 기술
-        #       address: http://ReleaseName-kafka-connect:8083
-        #   metrics:
-        #     port: 5556
-        #     type: JMX
+        - name: "{{ .Release.Name }}-kafka"
+          bootstrapServers: "{{ .Release.Name }}-kafka:9092"
+          # zookeeper: ReleaseName-zookeeper-headless:2181
+          kafkaConnect:
+            - name: connect
+              address: http://{{ .Release.Name }}-connect:8083
+          # metrics:
+          #   port: 5556
+          #   type: JMX
     auth:
       type: disabled
     management:
       health:
         ldap:
           enabled: false
+  yamlApplicationConfigConfigMap:
+    keyName: myconfig.yml
+    name: skafka-ui-config  # configMapName
+      
   tolerations:
     - key: type
       operator: "Equal"
