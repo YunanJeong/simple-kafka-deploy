@@ -166,20 +166,6 @@ k8dashboard:
   enabled: true
   image:  # 글로벌 적용 불가
     registry: docker.io
-  protocolHttp: true 
-  service:
-    externalPort: 8443
-  serviceAccount:
-    name: k8dash-admin
-  extraArgs:
-    - --token-ttl=86400
-    - --enable-skip-login 
-    - --enable-insecure-login
-  tolerations:
-  - key: type
-    operator: "Equal"
-    value: "ctrl"
-    effect: "NoSchedule"
 
 ui4kafka:
   enabled: true
