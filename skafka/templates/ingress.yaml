@@ -11,7 +11,7 @@ metadata:
 spec:
   rules:
     {{ if .Values.k8dashboard.enabled }}
-    - host: k8dashboard.{{ .Values.global.monitorDomain }}
+    - host: k8dashboard.{{ tpl (.Values.global.monitorDomain) $ }}
       http:
         paths:
         - path: /
@@ -23,7 +23,7 @@ spec:
                 number: 8443
     {{- end }}
     {{ if .Values.ui4kafka.enabled }}
-    - host: ui4kafka.{{ .Values.global.monitorDomain }}
+    - host: ui4kafka.{{ tpl (.Values.global.monitorDomain) $ }}
       http:
         paths:
         - path: /
