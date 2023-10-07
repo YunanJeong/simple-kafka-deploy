@@ -1,27 +1,26 @@
 # helm install시 사용되는 config value는 노출되지 않도록 gitignore권장
-# 이 파일은 로컬테스트용이라 샘플삼아 그냥 업로드한다.
+# 이 파일은 샘플삼아 업로드
 
 global:
   monitorDomain: "{{ .Release.Name }}.wai"
-  imageRegistry: docker.io            # bitnami 계열 글로벌 
+  imageRegistry: docker.io         # bitnami 계열 글로벌 
 
 kafka:
   listeners:
-    # https://github.com/bitnami/charts/issues/19128
     client:
-      protocol: PLAINTEXT  # SASL_PLAINTEXT
+      protocol: PLAINTEXT          # SASL_PLAINTEXT, # https://github.com/bitnami/charts/issues/19128
     controller:
-      protocol: PLAINTEXT  # SASL_PLAINTEXT
+      protocol: PLAINTEXT          # SASL_PLAINTEXT
     interbroker:
-      protocol: PLAINTEXT  # SASL_PLAINTEXT
+      protocol: PLAINTEXT          # SASL_PLAINTEXT
     external:
-      protocol: PLAINTEXT  # SASL_PLAINTEXT
+      protocol: PLAINTEXT          # SASL_PLAINTEXT
     extraListeners: []
-    advertisedListeners: ''  # "EXTERNAL://172.19.0.126:30003,CLIENT://test-kafka-controller-0.test-kafka-controller-headless.default.svc.cluster.local:9092,INTERNAL://test-kafka-controller-0.test-kafka-controller-headless.default.svc.cluster.local:9094"
+    advertisedListeners: ''        # e.g. "EXTERNAL://172.19.0.126:30003,CLIENT://test-kafka-controller-0.test-kafka-controller-headless.default.svc.cluster.local:9092,INTERNAL://test-kafka-controller-0.test-kafka-controller-headless.default.svc.cluster.local:9094"
 
   # sals:
   # tls: 
-  extraEnvVars: []        # 환경변수 "추가"
+  extraEnvVars: []                 # 환경변수 "추가"
   extraEnvVarsCM: ''
   extraEnvVarsSecret: ''
   extraVolumes: []
@@ -29,31 +28,33 @@ kafka:
   sidecars: []
   initContainers: []
   
-  controller:
+  # controller: KRAFT모드 Broker
+  controller:                      
     replicaCount: 3
-    controllerOnly: false
-    zookeeperMigrationMode: false  # true시, 주키퍼,크래프트 동시실행가능(마이그레이션목적)
+    controllerOnly: false          # true: broker 기능을 포함하지 않는 controller 실행 
+    zookeeperMigrationMode: false  # true: 주키퍼,크래프트 동시실행가능(마이그레이션목적)
     extraEnvVars: []               # Kafka Pod에 환경변수 "추가"
     affinity: {}
     nodeSelector: {}
     persistence:
-      enabled: false
-      size: 8Gi
+      enabled: false               # production 배포시, true 필수
+      size: 8Gi                    # 디스크 가용량의 70~80% 권장
       mountPath: /bitnami/kafka
     logPersistence:
       enabled: false
       size: 8Gi
       mountPath: /opt/bitnami/kafka/logs
-
-  broker:
+  
+  # broker: Zookeeper모드 Broker
+  broker:                          
     replicaCount: 0
-    zookeeperMigrationMode: false  # true시, 주키퍼,크래프트 동시실행가능(마이그레이션목적)
+    zookeeperMigrationMode: false  # true: 주키퍼,크래프트 동시실행가능(마이그레이션목적)
     extraEnvVars: []               # Kafka Pod에 환경변수 "추가"
     affinity: {}
     nodeSelector: {}
     persistence:
-      enabled: false
-      size: 8Gi  # pvc, 디스크 가용량의 70~80% 권장
+      enabled: false               # production 배포시, true 필수
+      size: 8Gi                    # 디스크 가용량의 70~80% 권장
       mountPath: /bitnami/kafka
     logPersistence:
       enabled: false
@@ -63,45 +64,51 @@ kafka:
   service:
     type: LoadBalancer
     ports:
-      client: 9092                    # "tcp-client"   (allows access from localhost machine)
-      external: 9095                  # "tcp-external" (requires externalAccess.enabled=true)
+      client: 9092                 # "tcp-client"   (allows access from localhost machine)
+      external: 9095               # "tcp-external" (requires externalAccess.enabled=true)
     nodePorts:
-      client: 30001   # ''
-      external: 30002 # ''
-    loadbalancerIP: ''
+      client: ''
+      external: ''
+    loadbalancerIP: ''             # Managed Service 등 실제 LB가 있으면 입력. K3s의 가상 LB는 자동적용
     
   externalAccess:
-    enabled: true
+    enabled: true                  # 위 "tcp-external"을 쓰려면 true 필요
     autoDiscovery:
-      enabled: false
+      enabled: true                # false시, 아래 네트워크 섹션 직접 설정 필요(nodeports, loadBalancerIps, externalIps 등)
       image:
-        registry: docker.io           # 오프라인환경 => 프록시registry를 쓰거나, autoDiscovery대신 loadBalancerIP 명시    
+        registry: docker.io        # 오프라인 환경에서 docker.io프록시 or 사설registry로 설정                                
+    
+    # KRAFT모드 Broker의 externalAccess 설정
     controller:
       service:
-        type: NodePort
-        ports:
-          external: 9094
-        loadBalancerIPs:
-          - "172.31.13.100"               
-          - "172.31.13.100"
-          - "172.31.15.100"
-        # [nodeport 사용, externalIP 미사용]시 advertisedListener로 "EXTERNAL://{공인IP}:{개별nodeport}"가 자동등록된다.
-        # EC2에선 괜찮지만, 일반적으로 공인IP를 통한 포트포워딩이 없으므로 사용불가
-        nodePorts: [30003, 30004, 30005] 
-        # externalIP에 broker 별 통신가능한 IP를 직접 입력해준다.(중복 가능)
-        externalIPs: [] # [172.19.0.126, 172.19.0.126, 172.19.0.126]
+        type: NodePort             # 실제 LB없으면, NodePort로 설정!!!
+                                   # externalAccess에서 LoadBalancer로 설정하지않아도, kafka.service.type=LoadBalancer이면 Kafka는 LB 형식으로 배포된다.
+                                   # externalAccess섹션은 개별 kafka노드를 어떻게 노출될 것인가를 결정한다.
+                                     # But, Kafka Client가 개별 노드에 직접접근하기보다는 클러스터 내부설정 용도에 가깝다.
+                                   # externalAccess섹션은 [kafka의 AdvertisedListener] 설정에 관여한다.
+                                    
+                                   # <kafka client가 "tcp-external"로 접근시 동작>
+                                     # 첫번째 통신은 "tcp-external"포트를 사용
+                                     # 이후 client는 AdvertisedListener를 받아, [EXTERNAL://IP:Port]로 통신
+                                    
+                                   # <네트워크 연결 확인시 주의 사항>
+                                     # 1회성 통신인 [curl], [kcat토픽조회] 등은 AdvertisedListener를 사용하지않아서 externalAccess 설정이 잘못되어도 정상 통신된다.
+                                     # 2회 이상 통신하는 [kafka-topics.sh토픽조회], [produce], [consume] 등으로 테스트가 필요
 
-    broker:
-      service:
-        type: LoadBalancer
         ports:
-          external: 9094                # 네트워크상 실제 사용가능한 Port("tcp-kafka")
-        loadBalancerIPs: []
-          # - "X.X.X.X"                 
-          # - "Y.Y.Y.Y"
-        loadBalancerNames: []
-          # - testbed-kafka-0.testbed-kafka-broker-headless.default.svc.cluster.local  # 172.X.X.X
-          # - testbed-kafka-1.testbed-kafka-broker-headless.default.svc.cluster.local  # DNS서버 or /etc/hosts 에 추가 필요
+          external: 9094           # "tcp-kafka"  (internally used)
+                                    
+        nodePorts: []              # broker 수 만큼 지정 (중복불가) # autoDiscovery 미사용시 필수 # e.g. [30003, 30004, 30005]  
+        externalIPs: []            # broker 수 만큼 지정 # autoDiscovery 미사용시 설정 권장 # broker 별 실제 통신가능한 IP 직접 입력 (중복가능)
+  
+                                   # externalAccess Nodeport모드 && autoDiscovery 미사용 &&  && externalIPs 미등록시
+                                     # advertisedListener로 "EXTERNAL://{공인IP}:{개별nodeport}"가 자동등록된다.
+                                     # EC2에선 괜찮지만, 일반적으로 공인IP를 통한 포트포워딩이 없으므로 사용불가
+    
+    # Zookeeper모드 Broker의 externalAccess 설정 (섹션 동일)
+    broker:                          
+      service:
+        type: NodePort
 
   networkPolicy:
     enabled: false
@@ -113,23 +120,23 @@ kafka:
     create: true
 
   metrics:
-    kafka:          # bitnami/kafka-exporter
+    kafka:          
       enabled: false
       image:
-        registry: docker.io  
+        registry: docker.io  # bitnami/kafka-exporter
       containerPorts:
         metrics: 9308
-    jmx:            # bitnami/jmx-exporter
+    jmx:            
       enabled: false
       kafkaJmxPort: 5555
       image:
-        registry: docker.io
+        registry: docker.io  # bitnami/jmx-exporter
       containerPorts:
         metrics: 5556
       service:
         ports:
           metrics: 5556
-    serviceMonitor: # bitnami/prometheus-operator
+    serviceMonitor:          # bitnami/prometheus-operator 관련 설정
       enabled: false
     prometheusRule:
       emabled: false
@@ -138,6 +145,7 @@ kafka:
     enabled: false
     numPartitions: 1
     replicationFactor: 1
+
   kraft:
     enabled: true
     clusterId: ""
@@ -145,14 +153,15 @@ kafka:
     enabled: false
     replicaCount: 3
     persistence:
-      size: 8Gi  # 충분 
+      enabled: false  # production시 true 필수
+      size: 8Gi       # 충분 
 
 
 connect:
   enabled: false
   replicaCount: 1
   image:
-    repository: confluentinc/cp-kafka-connect  # registry 포함 표기 가능. 없으면 container runtime의 default
+    repository: confluentinc/cp-kafka-connect     # registry 포함 표기 가능. 없으면 container runtime의 default
     pullPolicy: IfNotPresent
     tag: 7.2.2                                     
   configMapPairs:
@@ -161,10 +170,10 @@ connect:
   extraVolumeMounts: # []
     - name: plugin
       mountPath: /usr/share/confluent-hub-components
-  extraVolumes: # []
+  extraVolumes:      # []
     - name: plugin
       emptyDir: {}
-  initContainers: # []
+  initContainers:    # []
     - name: init-plugin
       image: confluentinc/cp-kafka-connect:7.2.2  # curl, wget, tar, confluent-hub 가능
       command:
