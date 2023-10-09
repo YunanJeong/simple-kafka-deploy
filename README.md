@@ -45,6 +45,7 @@ kubectl delete pvc data-testbed-kafka-0
 
 - Kafka UI: http://ui4kafka.test.wai
 - K8s Dashboard: http://k8dashboard.test.wai
+- http://{앱 이름}.{릴리즈 이름}.wai
 - 접속할 클라이언트 PC에서, 다음과 같이 hosts 파일에
 내용 추가 필요
 
