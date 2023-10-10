@@ -13,11 +13,22 @@ Kubernetes용 대시보드, Kafka, Kafka-ui, Kafka-connect를 포함한다.
 
 ## 사용법
 
-### 빠른 설치
+### 빠른 설치 (local환경, WSL)
 
 ```sh
 # helm install {releaseName} {chart} -f {customValue.yaml}
-helm install test https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v2.0.0/skafka-2.0.0.tgz -f https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v2.0.0/kraft-multi.yaml
+helm install test https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v2.0.1/skafka-2.0.1.tgz \
+-f https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v2.0.1/kraft-multi.yaml
+```
+
+### 빠른 설치 (public환경, EC2, public ip로 외부노출되는 환경)
+
+```sh
+# helm install {releaseName} {chart} -f {customValue.yaml} --set {eachValue}
+helm install test https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v2.0.1/skafka-2.0.1.tgz \
+-f https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v2.0.1/kraft-multi.yaml \
+--set "kafka.externalAccess.autoDiscovery.enabled=false" \
+--set "kafka.externalAccess.controller.service.nodePorts={30001,30002,30003}"
 ```
 
 ### 설치
@@ -25,17 +36,17 @@ helm install test https://github.com/YunanJeong/simple-kafka-deploy/releases/dow
 ```shell
 # 첫 설치
 # helm install {releaseName} {chart} -f {customValue.yaml}
-helm install test skafka-2.0.0.tgz -f values/kraft-multi.yaml
+helm install test skafka-2.0.1.tgz -f values/kraft-multi.yaml
 ```
 
 ### 커스텀 및 업글
 
 ```sh
 # 차트의 default value 참고하여 custom value 파일 작성
-helm show values skafka-2.0.0.tgz
+helm show values skafka-2.0.1.tgz
 
 # 업데이트
-helm upgrade test skafka-2.0.0.tgz -f values/kraft-multi.yaml
+helm upgrade test skafka-2.0.1.tgz -f values/kraft-multi.yaml
 ```
 
 ### 삭제
@@ -91,8 +102,9 @@ helm package skafka/
 │   ├── templates/          # Helm template
 │   └── values.yaml         # default value
 ├── values/               # 배포시 오버라이딩할 custom value 모음
-│   └── kraft-multi.yaml    # 샘플
-└── skafka-2.0.0.tgz      # 차트 배포용 아카이브 파일
+│   ├── kraft-multi.yaml    # 샘플
+│   └── kraft-multi-ec2.yaml
+└── skafka-x.x.x.tgz      # 차트 배포용 아카이브 파일
 ```
 
 ## 메모
@@ -105,3 +117,4 @@ helm package skafka/
   - [bitnami/kafka](https://artifacthub.io/packages/helm/bitnami/kafka)
   - [licenseware/kafka-connect](https://artifacthub.io/packages/helm/licenseware/kafka-connect)
   - [provectus/kafka-ui](https://artifacthub.io/packages/helm/kafka-ui/kafka-ui)
+- Kafka의 EXTERNAL AdvertisedListener가 자동등록될 때, helm value에 따라 local ip가 될 수도, public ip가 될 수도 있다. 경우에 따라 이 때문에 produce,consume이 불가능할 수 있으므로 체크 필수

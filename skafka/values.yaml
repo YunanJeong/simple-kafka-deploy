@@ -104,14 +104,14 @@ kafka:
         nodePorts: []              # broker 수 만큼 지정 (중복불가) # autoDiscovery 미사용시 필수 # e.g. [30003, 30004, 30005]  
         externalIPs: []            # broker 수 만큼 지정 # autoDiscovery 미사용시 설정 권장 # broker 별 실제 통신가능한 IP 직접 입력 (중복가능)
   
-                                   # externalAccess Nodeport모드 && autoDiscovery 미사용 &&  && externalIPs 미등록시
+                                   # externalAccess Nodeport모드 && autoDiscovery 미사용 && externalIPs 미등록시
                                      # advertisedListener로 "EXTERNAL://{공인IP}:{개별nodeport}"가 자동등록된다.
                                      # EC2에선 괜찮지만, 일반적으로 공인IP를 통한 포트포워딩이 없으므로 사용불가
     
     # Zookeeper모드 Broker의 externalAccess 설정 (섹션 동일)
     broker:                          
       service:
-        type: NodePort
+        type: LoadBalancer
 
   networkPolicy:
     enabled: false
