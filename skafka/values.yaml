@@ -31,52 +31,88 @@ kafka:
   sidecars: []
   initContainers: []
   
-  controller:
+  # controller: KRAFT모드 Broker
+  controller:                      
     replicaCount: 3
+    controllerOnly: false          # true: broker 기능을 포함하지 않는 controller 실행 
+    zookeeperMigrationMode: false  # true: 주키퍼,크래프트 동시실행가능(마이그레이션목적)
+    extraEnvVars: []               # Kafka Pod에 환경변수 "추가"
     affinity: {}
     nodeSelector: {}
     persistence:
-      size: 8Gi
+      enabled: false               # production 배포시, true 필수
+      size: 8Gi                    # 디스크 가용량의 70~80% 권장
+      mountPath: /bitnami/kafka
     logPersistence:
       enabled: false
       size: 8Gi
       mountPath: /opt/bitnami/kafka/logs
-
-  broker:
-    replicaCount: 3
-    zookeeperMigrationMode: false  # true시, 주키퍼,크래프트 동시실행가능(마이그레이션목적)
-    extraEnvVars: []  # Kafka Pod에 환경변수 "추가"
+  
+  # broker: Zookeeper모드 Broker
+  broker:                          
+    replicaCount: 0
+    zookeeperMigrationMode: false  # true: 주키퍼,크래프트 동시실행가능(마이그레이션목적)
+    extraEnvVars: []               # Kafka Pod에 환경변수 "추가"
     affinity: {}
     nodeSelector: {}
     persistence:
-      size: 8Gi  # /bitnami/kafka, pvc data-{rel}-kafka-broker-{num}, 디스크 가용량의 70~80% 권장
+      enabled: false               # production 배포시, true 필수
+      size: 8Gi                    # 디스크 가용량의 70~80% 권장
+      mountPath: /bitnami/kafka
     logPersistence:
       enabled: false
-      size: 8Gi  # /opt/bitnami/kafka/logs
+      size: 8Gi
+      mountPath: /opt/bitnami/kafka/logs
   
   service:
-    type: ClusterIP
+    type: LoadBalancer
     ports:
-      client: 9092                    # "tcp-client"   (allows access from localhost machine)
-      external: 9095                  # "tcp-external" (requires externalAccess.enabled=true)
-    loadbalancerIP: ''
+      client: 9092                 # "tcp-client"   (allows access from localhost machine)
+      external: 9095               # "tcp-external" (requires externalAccess.enabled=true)
+    nodePorts:
+      client: ''
+      external: ''
+    loadbalancerIP: ''             # Managed Service 등 실제 LB가 있으면 입력. K3s의 가상 LB는 자동적용
     
   externalAccess:
-    enabled: false
+    enabled: true                  # 위 "tcp-external"을 쓰려면 true 필요
     autoDiscovery:
-      enabled: true
+      enabled: true                # false시, 아래 네트워크 섹션 직접 설정 필요(nodeports, loadBalancerIps, externalIps 등)
       image:
-        registry: docker.io           # 비인터넷환경 => 프록시registry를 쓰거나, autoDiscovery대신 loadBalancerIP 명시    
-    broker:
+        registry: docker.io        # 오프라인 환경에서 docker.io프록시 or 사설registry로 설정                                
+    
+    # KRAFT모드 Broker의 externalAccess 설정
+    controller:
       service:
+        type: NodePort             # 실제 LB없으면, NodePort로 설정!!!
+                                   # externalAccess에서 LoadBalancer로 설정하지않아도, kafka.service.type=LoadBalancer이면 Kafka는 LB 형식으로 배포된다.
+                                   # externalAccess섹션은 개별 kafka노드를 어떻게 노출될 것인가를 결정한다.
+                                     # But, Kafka Client가 개별 노드에 직접접근하기보다는 클러스터 내부설정 용도에 가깝다.
+                                   # externalAccess섹션은 [kafka의 AdvertisedListener] 설정에 관여한다.
+                                    
+                                   # <kafka client가 "tcp-external"로 접근시 동작>
+                                     # 첫번째 통신은 "tcp-external"포트를 사용
+                                     # 이후 client는 AdvertisedListener를 받아, [EXTERNAL://IP:Port]로 통신
+                                    
+                                   # <네트워크 연결 확인시 주의 사항>
+                                     # 1회성 통신인 [curl], [kcat토픽조회] 등은 AdvertisedListener를 사용하지않아서 externalAccess 설정이 잘못되어도 정상 통신된다.
+                                     # 2회 이상 통신하는 [kafka-topics.sh토픽조회], [produce], [consume] 등으로 테스트가 필요
+
         ports:
-          external: 9094                # 네트워크상 실제 사용가능한 Port("tcp-kafka")
-        loadBalancerIPs: []
-          # - "X.X.X.X"                 # 노출되지 않도록 gitignore권장
-          # - "Y.Y.Y.Y"
-        loadBalancerNames: []
-          # - testbed-kafka-0.testbed-kafka-broker-headless.default.svc.cluster.local  # 172.X.X.X
-          # - testbed-kafka-1.testbed-kafka-broker-headless.default.svc.cluster.local  # DNS서버 or /etc/hosts 에 추가 필요
+          external: 9094           # "tcp-kafka"  (internally used)
+                                    
+        nodePorts: []              # broker 수 만큼 지정 (중복불가) # autoDiscovery 미사용시 필수 # e.g. [30003, 30004, 30005]  
+        externalIPs: []            # broker 수 만큼 지정 # autoDiscovery 미사용시 설정 권장 # broker 별 실제 통신가능한 IP 직접 입력 (중복가능)
+  
+                                   # externalAccess Nodeport모드 && autoDiscovery 미사용 &&  && externalIPs 미등록시
+                                     # advertisedListener로 "EXTERNAL://{공인IP}:{개별nodeport}"가 자동등록된다.
+                                     # EC2에선 괜찮지만, 일반적으로 공인IP를 통한 포트포워딩이 없으므로 사용불가
+    
+    # Zookeeper모드 Broker의 externalAccess 설정 (섹션 동일)
+    broker:                          
+      service:
+        type: NodePort
+
   networkPolicy:
     enabled: false
   volumePermissions:
@@ -87,23 +123,23 @@ kafka:
     create: true
 
   metrics:
-    kafka:          # bitnami/kafka-exporter
+    kafka:          
       enabled: false
       image:
-        registry: docker.io  
+        registry: docker.io  # bitnami/kafka-exporter
       containerPorts:
         metrics: 9308
-    jmx:            # bitnami/jmx-exporter
+    jmx:            
       enabled: false
       kafkaJmxPort: 5555
       image:
-        registry: docker.io
+        registry: docker.io  # bitnami/jmx-exporter
       containerPorts:
         metrics: 5556
       service:
         ports:
           metrics: 5556
-    serviceMonitor: # bitnami/prometheus-operator
+    serviceMonitor:          # bitnami/prometheus-operator 관련 설정
       enabled: false
     prometheusRule:
       emabled: false
@@ -112,6 +148,7 @@ kafka:
     enabled: false
     numPartitions: 1
     replicationFactor: 1
+
   kraft:
     enabled: true
     clusterId: ""
@@ -119,7 +156,8 @@ kafka:
     enabled: false
     replicaCount: 3
     persistence:
-      size: 8Gi  # 충분 
+      enabled: false  # production시 true 필수
+      size: 8Gi       # 충분 
 
 
 connect:
