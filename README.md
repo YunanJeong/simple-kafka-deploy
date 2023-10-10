@@ -1,6 +1,6 @@
 # simple-kafka-deploy
 
-로컬테스트 등 용도로 가벼운 Kafka를 빠르게 배포하기 위한 Helm Chart
+Kafka를 간편히 배포하기 위한 Helm Chart
 
 Kubernetes용 대시보드, Kafka, Kafka-ui, Kafka-connect를 포함한다.
 
@@ -13,39 +13,38 @@ Kubernetes용 대시보드, Kafka, Kafka-ui, Kafka-connect를 포함한다.
 
 ## 사용법
 
-### 배포 시
+### 배포
 
 ```shell
 # 첫 설치
 # helm install {ReleaseName} {chart archive} -f {custom config value}
-helm install testbed chartrepo/skafka-1.0.1.tgz -f values/testbed.yaml
+helm install test chartrepo/skafka-2.0.0.tgz -f values/kraft-multi.yaml
 
 # 업데이트
-helm upgrade testbed chartrepo/skafka-1.0.1.tgz -f values/testbed.yaml
+helm upgrade test chartrepo/skafka-2.0.0.tgz -f values/kraft-multi.yaml
 ```
 
-### 삭제 시
+### 삭제
 
 ```sh
 # 릴리즈 삭제
-helm uninstall testbed
+helm uninstall test
 
-# 과거 내역(PVC) 삭제
-kubectl delete pvc data-testbed-kafka-0
+# 과거 내역이 있는 경우(PVC) 삭제
+kubectl get pvc
+kubectl delete pvc {pvcName}
 ```
 
-## 접속법 (testbed.yaml 기준)
+## 접속법
 
 ### Kafka 접근 포트
 
-- 로컬: 9092
-- 외부: 9094 or 9095
+- 9095
 
-### 웹 기반 모니터링
+### 웹 기반 모니터링 (릴리즈명: test 기준)
 
 - Kafka UI: http://ui4kafka.test.wai
 - K8s Dashboard: http://k8dashboard.test.wai
-- http://{앱 이름}.{릴리즈 이름}.wai
 - 접속할 클라이언트 PC에서, 다음과 같이 hosts 파일에
 내용 추가 필요
 
@@ -57,14 +56,14 @@ kubectl delete pvc data-testbed-kafka-0
   X.X.X.X k8dashboard.test.wai
   ```
 
-## testbed.yaml 수정 시
+## 커스텀 value 수정 시 참고
 
 ```sh
 # 차트의 default value 참고
-helm show values chartrepo/skafka-1.0.1.tgz
+helm show values chartrepo/skafka-2.0.0.tgz
 ```
 
-## 차트 수정 시
+## 차트 수정 시 참고
 
 ```shell
 # dependency 다운로드 및 Chart.lock 최신화 (skafka 경로에서 실행)
@@ -81,16 +80,17 @@ helm package skafka/
 ├── LICENSE
 ├── README.md
 ├── chartrepo/            # 헬름 차트 아카이브 파일
-│   ├── skafka-0.1.0.tgz   # 구버전: kafka-connect 미포함
-│   └── skafka-1.0.1.tgz   # kafka-connect 포함
+│   ├── skafka-0.1.0.tgz   # kafka-connect 미포함
+│   ├── skafka-1.0.1.tgz   # kafka-connect 포함
+│   └── skafka-2.0.0.tgz   # kafka 최신화, 클러스터링, 외부노출 이슈 해결, kafka-ui에 릴리즈명 반영
 ├── skafka/               # 헬름 차트 디렉토리
-│   ├── Chart.lock         # dependency 버전 확정 내용    
+│   ├── Chart.lock         # dependency 버전 확정 내용
 │   ├── Chart.yaml         # 차트 파일(차트버전,앱버전,dependency버전 관리)
 │   ├── charts/            # Depedency chart 모음
 │   ├── templates/         # Helm template
 │   └── values.yaml        # default value
-└── values/               # 배포시 추가할 커스텀 value파일 모음
-    └── testbed.yaml
+└── values/               # 배포시 오버라이딩할 커스텀 value파일 모음
+    └── kraft-multi.yaml
 ```
 
 ## 메모
