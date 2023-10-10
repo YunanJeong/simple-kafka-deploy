@@ -158,7 +158,7 @@ kafka:
 
 
 connect:
-  enabled: false
+  enabled: true
   replicaCount: 1
   image:
     repository: confluentinc/cp-kafka-connect     # registry 포함 표기 가능. 없으면 container runtime의 default

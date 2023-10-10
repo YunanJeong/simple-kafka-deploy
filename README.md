@@ -13,15 +13,28 @@ Kubernetes용 대시보드, Kafka, Kafka-ui, Kafka-connect를 포함한다.
 
 ## 사용법
 
-### 배포
+### 빠른 설치 (커넥터 없음)
+
+```sh
+helm install test https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v2.0.0/skafka-2.0.0.tgz
+```
+
+### 설치
 
 ```shell
 # 첫 설치
-# helm install {ReleaseName} {chart archive} -f {custom config value}
-helm install test chartrepo/skafka-2.0.0.tgz -f values/kraft-multi.yaml
+# helm install {releaseName} {chart Archive or URL} -f {customValue.yaml}
+helm install test skafka-2.0.0.tgz -f values/kraft-multi.yaml
+```
+
+### 커스텀 및 업글
+
+```sh
+# 차트의 default value 참고하여 custom value 파일 작성
+helm show values skafka-2.0.0.tgz
 
 # 업데이트
-helm upgrade test chartrepo/skafka-2.0.0.tgz -f values/kraft-multi.yaml
+helm upgrade test skafka-2.0.0.tgz -f values/kraft-multi.yaml
 ```
 
 ### 삭제
@@ -41,33 +54,25 @@ kubectl delete pvc {pvcName}
 
 - 9095
 
-### 웹 기반 모니터링 (릴리즈명: test 기준)
+### 웹 기반 모니터링 (릴리즈명: `test` 기준)
 
-- Kafka UI: http://ui4kafka.test.wai
-- K8s Dashboard: http://k8dashboard.test.wai
-- 접속할 클라이언트 PC에서, 다음과 같이 hosts 파일에
-내용 추가 필요
-
-  ```sh
-  # 리눅스 /etc/hosts
-  # 윈도우 C:\Windows\System32\drivers\etc\hosts
-  # X.X.X.X는 접속대상 서버의 IP
-  X.X.X.X ui4kafka.test.wai
-  X.X.X.X k8dashboard.test.wai
-  ```
-
-## 커스텀 value 수정 시 참고
+- Kafka-UI: <http://ui4kafka.test.wai>
+- K8s-Dashboard: <http://k8dashboard.test.wai>
+- 접속할 클라이언트 PC의 hosts 파일에 다음과 같이 내용 추가 필요
 
 ```sh
-# 차트의 default value 참고
-helm show values chartrepo/skafka-2.0.0.tgz
+# 리눅스 /etc/hosts
+# 윈도우 C:\Windows\System32\drivers\etc\hosts
+# {serverIP} {appName}.{releaseName}.wai
+X.X.X.X ui4kafka.test.wai
+X.X.X.X k8dashboard.test.wai
 ```
 
 ## 차트 수정 시 참고
 
 ```shell
-# dependency 다운로드 및 Chart.lock 최신화 (skafka 경로에서 실행)
-helm dependency update
+# dependency 다운로드 및 Chart.lock 최신화
+helm dependency update skafka/
 
 # 차트를 아카이브 파일로 생성
 helm package skafka/
@@ -77,28 +82,24 @@ helm package skafka/
 
 ```sh
 .
-├── LICENSE
-├── README.md
-├── chartrepo/            # 헬름 차트 아카이브 파일
-│   ├── skafka-0.1.0.tgz   # kafka-connect 미포함
-│   ├── skafka-1.0.1.tgz   # kafka-connect 포함
-│   └── skafka-2.0.0.tgz   # kafka 최신화, 클러스터링, 외부노출 이슈 해결, kafka-ui에 릴리즈명 반영
-├── skafka/               # 헬름 차트 디렉토리
-│   ├── Chart.lock         # dependency 버전 확정 내용
-│   ├── Chart.yaml         # 차트 파일(차트버전,앱버전,dependency버전 관리)
-│   ├── charts/            # Depedency chart 모음
-│   ├── templates/         # Helm template
-│   └── values.yaml        # default value
-└── values/               # 배포시 오버라이딩할 커스텀 value파일 모음
-    └── kraft-multi.yaml
+├── reference/            # (단순 참고용) 하위 차트의 default value
+├── skafka/               # 헬름차트 디렉토리
+│   ├── Chart.lock          # 하위차트 버전 확정
+│   ├── charts/             # 하위차트 생성 경로
+│   ├── Chart.yaml          # 차트 파일(차트버전, 앱버전, 하위차트버전 관리)
+│   ├── templates/          # Helm template
+│   └── values.yaml         # default value
+├── values/               # 배포시 오버라이딩할 커스텀 value파일 모음
+│   └── kraft-multi.yaml
+└── skafka-2.0.0.tgz      # 차트 배포용 아카이브 파일
 ```
 
 ## 메모
 
-- 헬름차트 bitnami/kafka:23.0.7에서 보안설정이 없으면 파워쉘에서 Kafka에 네트워크 연결이 안될 수 있다. [참고](https://stackoverflow.com/questions/48603203/powershell-invoke-webrequest-throws-webcmdletresponseexception)
-  - 윈도에선 일반 cmd를 사용한다.
+- 윈도우에서 Kafka 접근시, 보안설정이 없으면 파워쉘 사용불가 [[참고]](https://stackoverflow.com/questions/48603203/powershell-invoke-webrequest-throws-webcmdletresponseexception)
+  - 윈도에선 일반 cmd를 사용
 - 외부연결 테스트는 curl, kafkacat, kafka-topics.sh 등으로 확인
-
+  - Kafka 정상동작 테스트는 반드시 Produce, Consume으로 한다.
 - Dependency Charts 바로가기
   - [bitnami/kafka](https://artifacthub.io/packages/helm/bitnami/kafka)
   - [licenseware/kafka-connect](https://artifacthub.io/packages/helm/licenseware/kafka-connect)
