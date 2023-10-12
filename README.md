@@ -94,16 +94,16 @@ helm package skafka/
 
 ```sh
 .
-├── reference/            # (단순 참고용) 하위 차트의 default value
-├── skafka/               # 헬름차트 디렉토리
-│   ├── Chart.lock          # 하위차트 버전 확정
-│   ├── charts/             # 하위차트 생성 경로
-│   ├── Chart.yaml          # 버전관리 (차트, 앱, 하위차트)
-│   ├── templates/          # Helm template
-│   └── values.yaml         # default value
-├── values/               # 배포시 오버라이딩할 custom value 모음
-│   ├── kraft-multi.yaml    # 샘플
-│   └── kraft-multi-ec2.yaml
+├── reference/              # (단순 참고용) 하위 차트의 default value
+├── skafka/                 # 헬름차트 디렉토리
+│   ├── Chart.lock            # 하위차트 버전 확정
+│   ├── charts/               # 하위차트 생성 경로
+│   ├── Chart.yaml            # 버전관리 (차트, 앱, 하위차트)
+│   ├── templates/            # Helm template
+│   └── values.yaml           # default value
+├── values/                 # 배포시 오버라이딩할 custom value 모음
+│   ├── kraft-multi.yaml      # 샘플(local ip)
+│   └── kraft-multi-ec2.yaml  # 샘플(public ip)
 └── skafka-x.x.x.tgz      # 차트 배포용 아카이브 파일
 ```
 
