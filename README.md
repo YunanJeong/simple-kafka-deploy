@@ -113,8 +113,9 @@ helm package skafka/
   - 윈도에선 일반 cmd를 사용
 - 외부연결 테스트는 curl, kafkacat, kafka-topics.sh 등으로 확인
   - Kafka 정상동작 테스트는 반드시 Produce, Consume으로 한다.
+- Kafka의 EXTERNAL AdvertisedListener가 자동등록될 때, helm value에 따라 local ip가 될 수도, public ip가 될 수도 있다. 경우에 따라 produce,consume이 불가능할 수 있으므로 체크 필수
 - Dependency Charts 바로가기
   - [bitnami/kafka](https://artifacthub.io/packages/helm/bitnami/kafka)
   - [licenseware/kafka-connect](https://artifacthub.io/packages/helm/licenseware/kafka-connect)
   - [provectus/kafka-ui](https://artifacthub.io/packages/helm/kafka-ui/kafka-ui)
-- Kafka의 EXTERNAL AdvertisedListener가 자동등록될 때, helm value에 따라 local ip가 될 수도, public ip가 될 수도 있다. 경우에 따라 이 때문에 produce,consume이 불가능할 수 있으므로 체크 필수
+- 브로커는 기본적으로 3 노드를 쓴다. 1노드시 connect에 connector를 등록할 때, timeout error가 발생할 수 있다.[포럼 참고](https://forum.confluent.io/t/kafka-connect-request-timeout/1311/3)
