@@ -1,3 +1,19 @@
+# 카프카 브로커 접속정보
+- K8s 클러스터 내부: {{ .Release.Name }}-kafka:{{ .Values.kafka.service.ports.client }}
+{{- if .Values.kafka.externalAccess.enabled }}    
+- K8s 클러스터 외부:
+  - localhost:  {{ .Values.kafka.service.ports.client }} or {{ .Values.kafka.service.ports.external }}
+  {{- if eq .Values.kafka.service.type "LoadBalancer" }}
+  - externalIP: {{ .Values.kafka.service.ports.external }}
+  {{- end }}
+  {{- if ne (len .Values.kafka.externalAccess.controller.service.nodePorts) 0 }}
+  - nodePorts: {{ .Values.kafka.externalAccess.controller.service.nodePorts }}
+  {{- end }}
+  {{- if ne (len .Values.kafka.externalAccess.broker.service.nodePorts) 0 }}
+  - nodePorts: {{ .Values.kafka.externalAccess.broker.service.nodePorts }}
+  {{- end }}
+{{- end }}
+
 1. Get the application URL by running these commands:
 {{- if .Values.ingress.enabled }}
 {{- range $host := .Values.ingress.hosts }}

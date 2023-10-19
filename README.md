@@ -16,17 +16,17 @@ Kubernetes용 대시보드, Kafka, Kafka-ui, Kafka-connect를 포함한다.
 ### 빠른 설치 (local환경, WSL)
 
 ```sh
-# helm install {releaseName} {chart} -f {customValue.yaml}
-helm install test https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v2.0.1/skafka-2.0.1.tgz \
--f https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v2.0.1/kraft-multi.yaml
+# private ip, KRAFT, broker 3, connect 1
+helm install test https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v2.0.2/skafka-2.0.2.tgz \
+-f https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v2.0.2/kraft-multi.yaml
 ```
 
 ### 빠른 설치 (public환경, EC2, public ip로 외부노출되는 환경)
 
 ```sh
-# helm install {releaseName} {chart} -f {customValue.yaml} --set {eachValue}
-helm install test https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v2.0.1/skafka-2.0.1.tgz \
--f https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v2.0.1/kraft-multi.yaml \
+# public ip, KRAFT, broker 3, connect 1
+helm install test https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v2.0.2/skafka-2.0.2.tgz \
+-f https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v2.0.2/kraft-multi.yaml \
 --set "kafka.externalAccess.autoDiscovery.enabled=false" \
 --set "kafka.externalAccess.controller.service.nodePorts={30001,30002,30003}"
 ```
@@ -36,17 +36,17 @@ helm install test https://github.com/YunanJeong/simple-kafka-deploy/releases/dow
 ```shell
 # 첫 설치
 # helm install {releaseName} {chart} -f {customValue.yaml}
-helm install test skafka-2.0.1.tgz -f values/kraft-multi.yaml
+helm install test skafka-2.0.2.tgz -f values/kraft-multi.yaml
 ```
 
 ### 커스텀 및 업글
 
 ```sh
 # 차트의 default value 참고하여 custom value 파일 작성
-helm show values skafka-2.0.1.tgz
+helm show values skafka-2.0.2.tgz
 
 # 업데이트
-helm upgrade test skafka-2.0.1.tgz -f values/kraft-multi.yaml
+helm upgrade test skafka-2.0.2.tgz -f values/kraft-multi.yaml
 ```
 
 ### 삭제
