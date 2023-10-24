@@ -119,3 +119,19 @@ helm package skafka/
   - [licenseware/kafka-connect](https://artifacthub.io/packages/helm/licenseware/kafka-connect)
   - [provectus/kafka-ui](https://artifacthub.io/packages/helm/kafka-ui/kafka-ui)
 - 브로커는 기본적으로 3 노드를 쓴다. 1노드시 connect에 connector를 등록할 때, timeout error가 발생할 수 있다.[포럼 참고](https://forum.confluent.io/t/kafka-connect-request-timeout/1311/3)
+- 힙사이즈 부족할시 설정 방법 (Kafka, KafkaConnect 공통)
+  - Kafka에서 JVM 메모리 할당량은 전체(컨테이너)의 25% 수준으로 한다. 기본 앱실행을 위한 JVM보다 파일 I/O에 처리하는 별도 메모리가 많기 때문
+  - 이에따라, 쿠버네티스 설정의 resources도 고정해줘야 한다.
+  - 다음과 같이 설정할 수 있는데, requests와 limits는 동일하게 설정해주고,
+  - value파일에서 작성하면 적용되도록 차트 템플릿에도 적용해주자. 차트에선 보통 deployment 오브젝트의 spec.template.spec.containers.[*] 섹션에 envs와 resources를 설정하는 부분이 있다.
+  - 
+```
+      envs: # []
+        - KAFKA_HEAP_OPTS="-Xms2G -Xmx2G"  # 힙 사이즈: 컨테이너의 25% 수준. 컨테이너 resource 고정 필요
+      resources:
+        requests:
+          memory: 8000Mi
+        limits: 
+          memory: 8000Mi
+```
+
