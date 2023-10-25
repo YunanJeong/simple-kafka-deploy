@@ -135,3 +135,9 @@ helm package skafka/
           memory: 8000Mi
 ```
 
+- 커넥트가 죽는 문제
+  - 자바힙메모리 부족 => 기본 설정값 낮음
+  - 카프카 앱 메모리는 JVM에 기본할당하는 것과 I/O에 할당하는 것이 있는데,
+    - => CPU가 꽉차서 힙메모리를 늘려도 꽉차버린다. 힙메모리 올려줘도 쿠버네티스 Pod에 할당된 리소스를 다쓰지도 못한다. 
+    - 힙메모리 늘리고 천천히 등록하자.
+    - [컨테이너 환경에서의 java 애플리케이션의 리소스와 메모리 설정](https://findstar.pe.kr/2022/07/10/java-application-memory-size-on-container/)
