@@ -155,8 +155,9 @@ kafka:
 
   provisioning:
     enabled: false
-    numPartitions: 1
-    replicationFactor: 1
+    topics: []
+    numPartitions: 1         # 초기 생성할 topic들의 partition 수 (broker의 default 설정 아님)
+    replicationFactor: 1     # 초기 생성할 topic들의 replicationFactors (broker의 default 설정 아님)
 
   kraft:
     enabled: true
