@@ -121,40 +121,38 @@ helm package skafka/
 
 ## 메모
 
-- 윈도우에서 Kafka 접근시, 보안설정이 없으면 파워쉘 사용불가 [[참고]](https://stackoverflow.com/questions/48603203/powershell-invoke-webrequest-throws-webcmdletresponseexception)
-  - 윈도에선 일반 cmd를 사용
-- 외부연결 테스트
-  - curl, kafkacat, kafka-topics.sh 등으로 확인
-  - Kafka 최종 정상동작 테스트시 반드시 Produce, Consume 기능을 확인한다.
-  - Kafka의 EXTERNAL AdvertisedListener가 자동등록될 때, helm value에 따라 local ip가 될 수도, public ip가 될 수도 있다. 경우에 따라 produce,consume이 불가능할 수 있으므로 체크 필수
-- Dependency Charts 바로가기
-  - [bitnami/kafka](https://artifacthub.io/packages/helm/bitnami/kafka)
-  - [licenseware/kafka-connect](https://artifacthub.io/packages/helm/licenseware/kafka-connect)
-  - [provectus/kafka-ui](https://artifacthub.io/packages/helm/kafka-ui/kafka-ui)
-- broker, connect 모두 정상 Running인데, 개별 connector 조회 및 등록이 timeout 나는 경우
-  - offset관련 토픽의 replication.factors 수가 브로커 수보다 많으면 문제 발생
-  - 시스템 부하가 심할 때 브로커 간 일부 연동 실패로, 같은 현상이 발생할 수 있다. 이후 부하가 완화되어도 해당 증상이 지속된다. 될 때까지 브로커 재실행하거나, 스케일아웃, 최적화 등으로 해결하자.
-- 힙사이즈 부족할시 설정 방법 (Kafka, KafkaConnect 공통)
-  - Kafka에서 JVM 메모리 할당량은 통상 전체(컨테이너)의 25% 수준으로 한다. 기본 앱실행을 위한 JVM보다 파일 I/O에 처리하는 별도 메모리가 많기 때문
-  - 이에따라, 쿠버네티스 설정의 resources도 고정해줘야 한다.
-  - 다음과 같이 설정할 수 있는데, requests와 limits는 동일하게 설정해준다.
-  - 차트에선 deployment 오브젝트의 spec.template.spec.containers.[*] 섹션에 envs와 resources를 설정하는 부분이 있다.
+### 윈도우에서 Kafka 접근시
+
+- 보안설정이 없으면 파워쉘 사용불가 [[참고]](https://stackoverflow.com/questions/48603203/powershell-invoke-webrequest-throws-webcmdletresponseexception)
+- 윈도에선 일반 cmd를 사용
+
+### Kafka 외부연결 테스트
+
+- curl, kafkacat, kafka-topics.sh 등으로 확인
+- Kafka 최종 정상동작 테스트시 반드시 Produce, Consume 기능을 확인한다.
+- Kafka의 EXTERNAL AdvertisedListener가 자동등록될 때, helm value에 따라 local ip가 될 수도, public ip가 될 수도 있다. 경우에 따라 produce,consume이 불가능할 수 있으므로 체크 필수
+
+### Dependency Charts 바로가기
+
+- [bitnami/kafka](https://artifacthub.io/packages/helm/bitnami/kafka)
+- [licenseware/kafka-connect](https://artifacthub.io/packages/helm/licenseware/kafka-connect)
+- [provectus/kafka-ui](https://artifacthub.io/packages/helm/kafka-ui/kafka-ui)
+
+### broker, connect 모두 정상 Running인데, 개별 connector 조회 및 등록시 timeout 발생 이슈
+
+- offset관련 토픽의 replication.factors 수가 브로커 수보다 많으면 문제 발생
+- 시스템 부하가 심할 때 브로커 간 일부 연동 실패로, 같은 현상이 발생할 수 있다. 이후 부하가 완화되어도 해당 증상이 지속된다. 될 때까지 브로커를 재실행하거나, 스케일아웃, 최적화 등으로 해결하자.
+
+### 힙사이즈 설정 방법 (Kafka, KafkaConnect 공통)
+
+- 필요한 상황이 아니면 default로 쓰면된다.
+- `KAFKA_HEAP_OPTS="-Xms2G -Xmx2G"`와 같이 환경변수를 컨테이너로 넘겨준다. value파일에서 설정가능하다. min, max 값은 동일하게 한다.
+- Kafka에서 JVM 메모리 할당량은 통상적으로 전체(컨테이너)리소스의 25%로 설정
+  - 앱실행용 JVM보다 파일 I/O 처리에 쓰이는 별도 메모리가 많기 때문
+  - 쿠버네티스의 resources에서 컨테이너 메모리를 힙의 4배로 할당한다. `requests.memory`, `limits.memory` 값은 동일하게 한다.
   
-```sh
-      envs: # []
-        - KAFKA_HEAP_OPTS="-Xms2G -Xmx2G"  # 힙 사이즈: 컨테이너의 25% 수준. 컨테이너 resource 고정 필요
-      resources:
-        requests:
-          memory: 8000Mi
-        limits: 
-          memory: 8000Mi
-```
+### 커넥트가 죽는 문제
 
-- 커넥트가 죽는 문제
-  - 커넥터 개수가 아주 많고, 상대적으로 처리할 데이터는 적은경우, JVM 힙메모리가 80~90% 수준으로 필요할 수 있다.
-  - 자바힙메모리 부족 => 기본 설정값 낮음
-  - 카프카 앱 메모리는 JVM에 기본할당하는 것과 I/O에 할당하는 것이 있는데,
-    - => CPU가 꽉차서 힙메모리를 늘려도 꽉차버린다. 힙메모리 올려줘도 쿠버네티스 Pod에 할당된 리소스를 다쓰지도 못한다. 
-    - 힙메모리 늘리고 천천히 등록하자.
-    - [컨테이너 환경에서의 java 애플리케이션의 리소스와 메모리 설정](https://findstar.pe.kr/2022/07/10/java-application-memory-size-on-container/)
-
+- 커넥터 개수가 아주 많고, 상대적으로 처리할 데이터는 적은 경우, **JVM 힙메모리가 80~90% 수준으로 필요할 수 있다.**
+- 힙 메모리 부족시, Container resources.limits에 도달하기도 전에 앱이 중지될 수 있다.
+- [컨테이너 환경에서의 java 애플리케이션의 리소스와 메모리 설정](https://findstar.pe.kr/2022/07/10/java-application-memory-size-on-container/)
