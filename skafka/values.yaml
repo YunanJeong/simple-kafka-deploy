@@ -180,9 +180,10 @@ connect:
     repository: confluentinc/cp-kafka-connect
     pullPolicy: IfNotPresent
     tag: ""  # 7.2.2
-  configMapPairs:
+  configMapPairs:  # 지정된 KEY 외에도 커스텀 환경변수를 넘길 수 있음
     CONNECT_BOOTSTRAP_SERVERS: "{{ .Release.Name }}-kafka:9092"
     CONNECT_REST_PORT: "8083"
+    # KAFKA_HEAP_OPTS: "-Xms4G -Xmx4G"
   extraVolumeMounts: []
     # - name: plugin
     #   mountPath: /usr/share/confluent-hub-components
