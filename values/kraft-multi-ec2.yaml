@@ -9,11 +9,10 @@ kafka:
   image:
     registry: docker.io
 
-  # server.properties에 항목 추가  
-  extraConfig: ""      
-             # "offsets.topic.replication.factor=3"   # 브로커 default(브로커 수 3개 이상)
-             # (replication.factor <= 브로커 수) 로 되어야함
-             # "offsets.topic.replication.factor=1"   # 브로커 1~2개 사용시
+  # server.properties에 항목 추가
+  extraConfig: |      
+               offsets.topic.replication.factor=1   # __consumer_offsets 토픽의 replications 설정  # 브로커 수보다 크면 안되며, production시 1보다는 큰값 권장
+               num.partitions=1                     # topic default 설정 등 
 
   listeners:
     client:
@@ -152,8 +151,9 @@ kafka:
 
   provisioning:
     enabled: false
-    numPartitions: 1
-    replicationFactor: 1
+    topics: []
+    numPartitions: 1         # 초기 생성할 topic들의 partition 수 (broker의 default 설정 아님)
+    replicationFactor: 1     # 초기 생성할 topic들의 replicationFactors (broker의 default 설정 아님)
 
   kraft:
     enabled: true
