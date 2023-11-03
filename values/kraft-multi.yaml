@@ -6,6 +6,16 @@ global:
   imageRegistry: docker.io         # bitnami 계열 글로벌 
 
 kafka:
+  image:
+    registry: docker.io
+
+  # server.properties에 항목 추가
+  extraConfig: |
+               # __consumer_offsets 토픽의 replications 설정  # 브로커 수보다 크면 안되며, production시 1보다는 큰값 권장      
+               offsets.topic.replication.factor=1 
+               # topic default 설정 등 
+               num.partitions=1 
+
   listeners:
     client:
       protocol: PLAINTEXT          # SASL_PLAINTEXT, # https://github.com/bitnami/charts/issues/19128
@@ -143,8 +153,9 @@ kafka:
 
   provisioning:
     enabled: false
-    numPartitions: 1
-    replicationFactor: 1
+    topics: []
+    numPartitions: 1         # 초기 생성할 topic들의 partition 수 (broker의 default 설정 아님)
+    replicationFactor: 1     # 초기 생성할 topic들의 replicationFactors (broker의 default 설정 아님)
 
   kraft:
     enabled: true
@@ -164,9 +175,10 @@ connect:
     repository: confluentinc/cp-kafka-connect     # registry 포함 표기 가능. 없으면 container runtime의 default
     pullPolicy: IfNotPresent
     tag: 7.2.2                                     
-  configMapPairs:
+  configMapPairs:  # 지정된 KEY 외에도 커스텀 환경변수를 넘길 수 있음
     CONNECT_BOOTSTRAP_SERVERS: "{{ .Release.Name }}-kafka:9092"
     CONNECT_REST_PORT: "8083"
+    # KAFKA_HEAP_OPTS: "-Xms4G -Xmx4G"
   extraVolumeMounts: # []
     - name: plugin
       mountPath: /usr/share/confluent-hub-components

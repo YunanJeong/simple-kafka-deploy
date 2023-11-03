@@ -8,6 +8,14 @@ global:
   imageRegistry: docker.io              # bitnami 계열 글로벌
 
 kafka:
+  image:
+    registry: docker.io
+
+  # server.properties에 항목 추가  
+  extraConfig: |      
+               offsets.topic.replication.factor=1   # __consumer_offsets 토픽의 replications 설정  # 브로커 수보다 크면 안되며, production시 1보다는 큰값 권장
+               num.partitions=1                     # topic default 설정 등 
+  
   listeners:
     # https://github.com/bitnami/charts/issues/19128
     client:
@@ -33,7 +41,7 @@ kafka:
   
   # controller: KRAFT모드 Broker
   controller:                      
-    replicaCount: 3
+    replicaCount: 3                # production ready에선 (호스트 수:브로커 수)=(1:1)로 설정 (스케일 인아웃시 pvc관리 용이)
     controllerOnly: false          # true: broker 기능을 포함하지 않는 controller 실행 
     zookeeperMigrationMode: false  # true: 주키퍼,크래프트 동시실행가능(마이그레이션목적)
     extraEnvVars: []               # Kafka Pod에 환경변수 "추가"
@@ -50,7 +58,7 @@ kafka:
   
   # broker: Zookeeper모드 Broker
   broker:                          
-    replicaCount: 0
+    replicaCount: 0                # production ready에선 (호스트 수:브로커 수)=(1:1)로 설정 (스케일 인아웃시 pvc관리 용이)
     zookeeperMigrationMode: false  # true: 주키퍼,크래프트 동시실행가능(마이그레이션목적)
     extraEnvVars: []               # Kafka Pod에 환경변수 "추가"
     affinity: {}
@@ -146,8 +154,9 @@ kafka:
 
   provisioning:
     enabled: false
-    numPartitions: 1
-    replicationFactor: 1
+    topics: []
+    numPartitions: 1         # 초기 생성할 topic들의 partition 수 (broker의 default 설정 아님)
+    replicationFactor: 1     # 초기 생성할 topic들의 replicationFactors (broker의 default 설정 아님)
 
   kraft:
     enabled: true
@@ -171,9 +180,10 @@ connect:
     repository: confluentinc/cp-kafka-connect
     pullPolicy: IfNotPresent
     tag: ""  # 7.2.2
-  configMapPairs:
+  configMapPairs:  # 지정된 KEY 외에도 커스텀 환경변수를 넘길 수 있음
     CONNECT_BOOTSTRAP_SERVERS: "{{ .Release.Name }}-kafka:9092"
     CONNECT_REST_PORT: "8083"
+    # KAFKA_HEAP_OPTS: "-Xms4G -Xmx4G"
   extraVolumeMounts: []
     # - name: plugin
     #   mountPath: /usr/share/confluent-hub-components
