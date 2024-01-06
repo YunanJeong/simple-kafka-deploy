@@ -149,7 +149,7 @@ kafka:
     serviceMonitor:          # bitnami/prometheus-operator 관련 설정
       enabled: false
     prometheusRule:
-      emabled: false
+      enabled: false
 
   provisioning:
     enabled: false
