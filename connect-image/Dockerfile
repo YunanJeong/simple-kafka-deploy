@@ -1,39 +1,39 @@
-# 소스 + 싱크 커넥터 이미지
-FROM bitnami/kafka:latest
+FROM bitnami/kafka:3.5.1
 
 USER root
 RUN apt-get update
-RUN apt-get install -y curl dnsutils netcat unzip vim iputils-ping jq
-RUN apt-get install -y gettext
-
-######################################
-# 커넥트 설정파일
-######################################
-# 로컬파일을 이미지 내부로 복제
-COPY config/* /opt/bitnami/kafka/config
-# 설정파일에 환경변수 반영
-RUN cd /opt/bitnami/kafka/config \
-    && chmod +x set_connect.sh \
-    && ./set_connect.sh
-
-######################################
-# 플러그인 설치
-######################################
-# 로컬파일을 이미지 내부로 복제
-COPY plugins/* /usr/share/java
-# 각 zip 파일 압축해제 후 삭제
-RUN cd /usr/share/java \
-    && for file in *.zip; do unzip "$file"; done \
-    && rm *.zip
-# 기타 플러그인 배치
-RUN cd /usr/share/java \
-    && mv mysql-connector-java-8.0.19.jar confluentinc-kafka-connect-jdbc-10.7.4/
-
+RUN apt-get install -y curl dnsutils netcat unzip vim iputils-ping jq gettext
 
 RUN echo 'alias ll="ls -alh"' >> ~/.bashrc
 
-# Kafka Connect 실행
-CMD /opt/bitnami/kafka/bin/connect-distributed.sh /opt/bitnami/kafka/config/connect-distributed.properties
+######################################
+# 로컬파일을 이미지 내부로 복제
+######################################
+COPY config/* /opt/bitnami/kafka/config/
+COPY plugins/* /opt/bitnami/kafka/plugins/
+
+######################################
+# 커넥터 등 플러그인 설치
+######################################
+# 각 zip 파일 압축해제 후 삭제
+RUN cd /opt/bitnami/kafka/plugins \
+    && for file in *.zip; do unzip "$file"; done \
+    && rm *.zip
+
+# 각 tar.gz 파일 압축해제 후 삭제
+RUN cd /opt/bitnami/kafka/plugins \
+    && for file in *.tar.gz; do tar -xvf "$file"; done \
+    && rm *.tar.gz
+
+# 기타 플러그인 설치
+RUN cd /opt/bitnami/kafka/plugins \
+    && mv mysql-connector-java-8.0.19.jar confluentinc-kafka-connect-jdbc-10.7.4/
+
+######################################
+# 커넥트 설정반영 및 실행
+######################################
+RUN chmod +x /opt/bitnami/kafka/config/start_connect.sh
+CMD /opt/bitnami/kafka/config/start_connect.sh
 
 # 안꺼지게 하기(테스트용)
 # CMD tail -f /dev/null
