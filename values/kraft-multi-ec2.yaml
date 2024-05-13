@@ -11,8 +11,10 @@ kafka:
 
   # server.properties에 항목 추가
   extraConfig: |      
-               offsets.topic.replication.factor=1   # __consumer_offsets 토픽의 replications 설정  # 브로커 수보다 크면 안되며, production시 1보다는 큰값 권장
-               num.partitions=1                     # topic default 설정 등 
+               # __consumer_offsets 토픽의 replications 설정  # 브로커 수보다 크면 안되며, production시 1보다는 큰값 권장      
+               offsets.topic.replication.factor=1 
+               # topic default 설정 등 
+               num.partitions=1 
 
   listeners:
     client:
