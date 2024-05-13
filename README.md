@@ -54,14 +54,15 @@ helm install test skafka-2.0.3.tgz -f values/kraft-multi.yaml \
 
 ### Broker 외부노출 포트
 
-- `9095`
-- Public 환경에서 9095로 접근시 NP Port 중 하나로 랜덤 매칭되어 내부통신
-  - 즉, `9095 사용시 30003, 30004, 30005에 대한 네트워크 인가도 필요`
+- LB Port: 9095
+- NP Port: 30003,30004,30005
+- `외부에서 접근시 LB Port를 이용하되, 모든 NP Port에 대한 네트워크 인가 필요`
+- 외부에서 9095로 접근시 해당 연결 동안 NP Port 중 하나로 랜덤 매칭되어 통신
   - 이는 Kafka의 특징이다. (Kubernetes의 특징은 아님)
-- 30001,30002,30003으로 접근시 개별 브로커에 직접 접근
-- 1차 통신엔 9095로 접근하지만 2차 통신부터는 kafka가 제공한 broker 주소,포트로 통신됨
-  - kafka가 제공하는 broker 주소, 포트는 네트워크 환경, 차트 설정따라 매번 다를 수 있음
-  - opt/bitnmai/kafka/config/server.properties에서 advertised.listeners의 EXTERNAL:// 포트 확인가능
+  - 1차 통신엔 9095로 접근하지만 2차 통신부터는 kafka가 제공한 broker 주소,포트로 통신됨
+  - 이 때 kafka가 제공하는 주소, 포트는 네트워크 환경, 차트 설정따라 매번 다를 수 있음
+  - 컨테이너 내부 `opt/bitnmai/kafka/config/server.properties`의 `advertised.listeners의 EXTERNAL://`에서 확인가능
+- NP Port로 개별 broker에 직접접근해도 되지만, 부하분산 효과가 없고, 포트가 직접 노출되어 보안상 좋지 않음
 
 ### 웹 기반 모니터링 (릴리즈명: `test` 기준)
 
