@@ -40,7 +40,7 @@ kafka:
   
   # controller: KRAFT모드 Broker
   controller:                      
-    replicaCount: 3
+    replicaCount: 1
     controllerOnly: false          # true: broker 기능을 포함하지 않는 controller 실행 
     zookeeperMigrationMode: false  # true: 주키퍼,크래프트 동시실행가능(마이그레이션목적)
     extraEnvVars: []               # Kafka Pod에 환경변수 "추가"
@@ -72,7 +72,7 @@ kafka:
       mountPath: /opt/bitnami/kafka/logs
   
   service:
-    type: NodePort
+    type: LoadBalancer
     ports:
       client: 9092                 # "tcp-client"   (allows access from localhost machine)
       external: 9095               # "tcp-external" (requires externalAccess.enabled=true)
@@ -169,7 +169,7 @@ kafka:
 
 
 connect:
-  enabled: false
+  enabled: true
   replicaCount: 1
   image:
     repository: confluentinc/cp-kafka-connect     # registry 포함 표기 가능. 없으면 container runtime의 default
