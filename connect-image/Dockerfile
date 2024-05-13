@@ -26,7 +26,7 @@ RUN cd /opt/bitnami/kafka/plugins \
 RUN cd /opt/bitnami/kafka/plugins \
     && if [ "$(ls *.tar.gz 2>/dev/null)" ]; then \
          for file in *.tar.gz; do tar -xzvf "$file"; done \
-         && rm *.tar; \
+         && rm *.tar.gz; \
        fi
 
 # 기타 플러그인 설치
