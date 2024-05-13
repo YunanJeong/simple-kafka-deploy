@@ -17,13 +17,17 @@ COPY plugins/* /opt/bitnami/kafka/plugins/
 ######################################
 # 각 zip 파일 압축해제 후 삭제
 RUN cd /opt/bitnami/kafka/plugins \
-    && for file in *.zip; do unzip "$file"; done \
-    && rm *.zip
+    && if [ "$(ls *.zip 2>/dev/null)" ]; then \
+         for file in *.zip; do unzip "$file"; done \
+         && rm *.zip; \
+       fi
 
 # 각 tar.gz 파일 압축해제 후 삭제
 RUN cd /opt/bitnami/kafka/plugins \
-    && for file in *.tar.gz; do tar -xvf "$file"; done \
-    && rm *.tar.gz
+    && if [ "$(ls *.tar.gz 2>/dev/null)" ]; then \
+         for file in *.tar.gz; do tar -xzvf "$file"; done \
+         && rm *.tar; \
+       fi
 
 # 기타 플러그인 설치
 RUN cd /opt/bitnami/kafka/plugins \

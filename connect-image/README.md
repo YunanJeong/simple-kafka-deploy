@@ -19,5 +19,5 @@
 
 ```sh
 # 빌드
-docker build ./ my-connect:0.0.1
+docker build ./ -t my-connect:0.0.1
 ```
