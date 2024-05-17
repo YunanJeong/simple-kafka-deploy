@@ -89,22 +89,30 @@ kafka:
         registry: docker.io        # 오프라인 환경에서 docker.io프록시 or 사설registry로 설정                                
     
     # KRAFT모드 Broker의 externalAccess 설정
-    controller:
-      service:
-        type: NodePort             # 실제 LB없으면, NodePort로 설정!!!
-                                   # externalAccess에서 LoadBalancer로 설정하지않아도, kafka.service.type=LoadBalancer이면 Kafka는 LB 형식으로 배포된다.
-                                   # externalAccess섹션은 개별 kafka노드를 어떻게 노출될 것인가를 결정한다.
-                                     # But, Kafka Client가 개별 노드에 직접접근하기보다는 클러스터 내부설정 용도에 가깝다.
-                                   # externalAccess섹션은 [kafka의 AdvertisedListener] 설정에 관여한다.
+    controller:  
+      service:                     # Broker 당 1개씩 생성되는 Service
+        type: NodePort            
+                                   ##################################################################################################
+                                   # K8s기반 Kafka에서 외부 Client와 Broker 간 통신과정
+                                     # 1. Client가 LoadBalancer의 주소(tcp-external)로 접근
+                                     # 2. LoadBalancer는 Client의 최초 접근 트래픽을 Broker 1개에 랜덤매칭하여 포워딩  (K8s의 LoadBalancer 기능)
+                                     # 3. 해당 Broker는 자신에게 직접 접근가능한 주소를 Kafka Client에게 전달          (Kafka의 advertised.listener 기능)
+                                     # 4. Kafka Client는 connection이 유지되는 동안 Broker로부터 받은 주소로 통신
+
+                                     # => kafka.service: 1번 과정의 "LoadBalancer 접근 방법"을 결정
+                                     # => kakfa.externalAccess.controller.service: 4번 과정의 "개별 Broker 접근 방법"을 결정
+                                   ##################################################################################################
+                                   
+                                   # externalAccess섹션은 [kafka server.properties의 advertised.listeners] 설정에 관여한다.
                                     
                                    # <kafka client가 "tcp-external"로 접근시 동작>
                                      # 첫번째 통신은 "tcp-external"포트를 사용
-                                     # 이후 client는 AdvertisedListener를 받아, [EXTERNAL://IP:Port]로 통신
+                                     # 이후 client는 advertised.listeners의 [EXTERNAL://IP:Port]로 통신
                                     
-                                   # <네트워크 연결 확인시 주의 사항>
-                                     # 1회성 통신인 [curl], [kcat토픽조회] 등은 AdvertisedListener를 사용하지않아서 externalAccess 설정이 잘못되어도 정상 통신된다.
-                                     # 2회 이상 통신하는 [kafka-topics.sh토픽조회], [produce], [consume] 등으로 테스트가 필요
-
+                                   # <네트워크 연결 검증시 주의 사항>
+                                     # 1회성 통신인 [curl], [kcat토픽조회] 등은 advertised.listeners 주소를 사용하지 않으므로 externalAccess 설정에 오류가 있어도 정상 통신된다.
+                                     # 2회 이상 통신하는 [kafka-topics.sh토픽조회], [produce], [consume] 등으로 테스트 필요
+                                     
         ports:
           external: 9094           # "tcp-kafka"  (internally used)                 
         nodePorts: [30003, 30004, 30005]
