@@ -20,7 +20,7 @@ kafka:
              # replications.factor 권장값: n-1
              # replications.factor 허용값: n과 같거나 작아야 함 && 최소 1
              
-             # 이미 생성된 topic의 replication.factor를 변경하는 것은 kafka-reassign-partitions.sh 스크립트를 사용하여 수동변경 필요
+             # 이미 생성된 topic의 replication.factor는 여기서 변경불가. kafka-reassign-partitions.sh 스크립트를 사용하여 수동변경 가능.
              # 중요한 topic일 수록 replication.factor가 크면 좋음(e.g. __consumer_offset, connect-offset 등 연결정보 토픽)
              ########################################################
 
