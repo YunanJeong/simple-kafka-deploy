@@ -151,38 +151,11 @@ helm package skafka/
 - [licenseware/kafka-connect](https://artifacthub.io/packages/helm/licenseware/kafka-connect)
 - [provectus/kafka-ui](https://artifacthub.io/packages/helm/kafka-ui/kafka-ui)
 
-### broker, connect 모두 정상 Running인데, 개별 connector 조회 및 등록시 timeout 발생 이슈
+### Kafka 이슈 (커스터마이징, 트러블 슈팅)
+
+[kafka-test](github.com/yunanjeong/kafka-test)에 문서화
+
+#### broker, connect 모두 정상 Running인데, 개별 connector 조회 및 등록시 timeout 발생 이슈
 
 - offset관련 토픽의 replication.factors 수가 브로커 수보다 많으면 문제 발생
 - 시스템 부하가 심할 때 브로커 간 일부 연동 실패로, 같은 현상이 발생할 수 있다. 이후 부하가 완화되어도 해당 증상이 지속된다. 될 때까지 브로커를 재실행하거나, 스케일아웃, 최적화 등으로 해결하자.
-
-## 메모리 관련
-
-### 힙사이즈 설정 방법 (Kafka, KafkaConnect 공통)
-
-- 필요한 상황이 아니면 default로 쓰면된다.
-- `KAFKA_HEAP_OPTS="-Xms2G -Xmx2G"`와 같이 환경변수를 컨테이너로 넘겨준다. value파일에서 설정가능하다. min, max 값은 동일하게 한다.
-- Kafka에서 JVM 메모리 할당량은 통상적으로 전체(컨테이너)리소스의 25%로 설정
-  - 앱실행용 JVM보다 파일 I/O 처리에 쓰이는 별도 메모리가 많기 때문
-  - 쿠버네티스의 resources에서 컨테이너 메모리를 힙의 4배로 할당한다. `requests.memory`, `limits.memory` 값은 동일하게 한다.
-- 빅데이터 처리 등 일부 분야에서 힙메모리를 `10GB 이상으로 쓰는게 아주 이상한 일은 아니다`.
-- 처음 실행시 메모리가 부족하진 않으나 `조금씩 꾸준히 늘어나는 경우, 메모리 누수` 가능성이 높아 코드 개선 필요
-  
-### 앱이 죽는 경우
-
-- 힙 메모리 부족시, Container의 resources.limits에 도달하기도 전에 앱이 중지될 수 있다.
-
-#### 대응방법
-
-- JVM 힙메모리는 노드의 10\~50% 수준이 적정하지만, 필요에 따라 80\~90%까지 설정할 수 있다.
-  - e.g. 데이터 규모는 작은데 상대적으로 커넥터 개수는 많은 경우, JVM메모리는 많이 필요하지만 파일 I/O 처리용 메모리는 많이 필요없어서 이렇게 설정 가능 (커넥터 수 백개 사용한 경우였음)
-- 커넥트가 단독으로 노드를 사용하게 한다. resources.limit은 설정하지 않는다.
-- (위 자원할당 방법들로 안되면) 스케일 업&아웃이나 별도 최적화된 Kafka Client앱을 만든다.
-- [컨테이너 환경에서의 java 애플리케이션의 리소스와 메모리 설정](https://findstar.pe.kr/2022/07/10/java-application-memory-size-on-container/)
-
-### 메모리 점유율이 높은 경우
-
-- 메모리 점유율이 80~90%로 되어있다고 해서 항상 해당 규모의 메모리가 필요한 것은 아니다.
-- 해당 앱에서 필요한 최대치라고 보면 된다. JVM은 한 번 사용했던 메모리를 반환하지 않고 계속 가지고 있기 때문.
-- `jstat` 등으로 jvm을 모니터링하면 현재 사용중인 메모리를 정확하게 파악할 수 있음
-- 특히 이미 적재된 데이터를 kafka로 이전할 시, 메모리가 과점유되는데 데이터 이전 완료 후 앱을 한 번 재실행 해주면 좋다. 
