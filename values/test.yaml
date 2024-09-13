@@ -54,8 +54,17 @@ kafka:
         protocol: PLAINTEXT
         sslClientAuth: ""
 
-    # 임시발급주소 => 테스트용으로 git 업로드되므로 실사용X
-    advertisedListeners: "CUSTOM://172.31.33.64:9097,EXTERNAL://54.180.78.213:9095,CLIENT://test-kafka-controller-0.test-kafka-controller-headless.default.svc.cluster.local:9092,INTERNAL://test-kafka-controller-0.test-kafka-controller-headless.default.svc.cluster.local:9094"        # e.g. "EXTERNAL://172.19.0.126:30003,CLIENT://test-kafka-controller-0.test-kafka-controller-headless.default.svc.cluster.local:9092,INTERNAL://test-kafka-controller-0.test-kafka-controller-headless.default.svc.cluster.local:9094"
+    # EXTERNAL에 한해서 각 브로커마다 advertised listener를 다르게(각 노드주소에맞게) 자동설정할 수 있다.
+    # 이 헬름차트에선 EXTERNAL 말고는 전부 service 주소로 자동배치한다.
+    # 각 노드마다 노드의 실제주소를 적어줘야하는데 override는 모든 노드에 적용되기 때문에 클러스터링 구성시 사용이 좀 힘듦
+    
+    # 실제 로드밸런서가 구축된 환경이라면 advertisedListener로 LB주소를 반환해줘도됨
+    # 실제 로드밸런서가 없는 환경이라면 반환된 LB주소로 클라이언트가 접근해도 라우팅테이블이 없기 떄문에 엉뚱한 노드로 통신할 수 있음.
+
+    # 결론: Kafka에서 포트별로 트래픽을 나누어 내부망접근, 외부망 접근을 구분하는 것은 가능하지만,
+    # => 이 헬름차트로 구현하려면 매우 번거로운 편이다(특히, 클러스터링 구성시).
+    # => 여러 경로의 외부접근(EXTERNAL)이 있을 것이라고 고려되지 않았음.
+    advertisedListeners: ''  # e.g. "EXTERNAL://172.19.0.126:30003,CLIENT://test-kafka-controller-0.test-kafka-controller-headless.default.svc.cluster.local:9092,INTERNAL://test-kafka-controller-0.test-kafka-controller-headless.default.svc.cluster.local:9094"
     overrideListeners: "CUSTOM://:9097,CLIENT://:9092,INTERNAL://:9094,EXTERNAL://:9095,CONTROLLER://:9093"
 
   # sals:
