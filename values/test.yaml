@@ -153,7 +153,8 @@ kafka:
           - name: tcp-custom-public
             port: 9097
             targetPort: tcp-custom # 9097
-            
+            nodePort: 30006
+
     # Zookeeper모드 Broker의 externalAccess 설정 (섹션 동일)
     broker:                          
       service:
