@@ -44,7 +44,7 @@ kafka:
       protocol: PLAINTEXT          # SASL_PLAINTEXT
     external:
       protocol: PLAINTEXT          # SASL_PLAINTEXT
-    extraListeners: # []
+    extraListeners: # [] ###test
       - name: CUSTOM
         containerPort: 9097
         protocol: PLAINTEXT
@@ -99,6 +99,10 @@ kafka:
     ports:
       client: 9092                 # "tcp-client"   (allows access from localhost machine)
       external: 9095               # "tcp-external" (requires externalAccess.enabled=true)
+    extraPorts:    ###test
+      - name: tcp-custom
+        port: 9097
+        targetPort: 9097
     nodePorts:
       client: ''
       external: ''
