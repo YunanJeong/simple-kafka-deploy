@@ -44,12 +44,16 @@ kafka:
       protocol: PLAINTEXT          # SASL_PLAINTEXT
     external:
       protocol: PLAINTEXT          # SASL_PLAINTEXT
+
+    #  extraListeners=> bitnami/kafka의 _helpers.tpl 함수 오류로 사용이 애매함, advertisedListener 항목엔 들어가는데 listener에 들어가지 않음
+    # 이 옵션 쓰려면 overridListeners로 전체 listeners를 덮어쓰기해야함 (tpl 적용안됨)
     extraListeners: # [] ###test
       - name: CUSTOM
         containerPort: 9097
         protocol: PLAINTEXT
         sslClientAuth: ""
     advertisedListeners: ''        # e.g. "EXTERNAL://172.19.0.126:30003,CLIENT://test-kafka-controller-0.test-kafka-controller-headless.default.svc.cluster.local:9092,INTERNAL://test-kafka-controller-0.test-kafka-controller-headless.default.svc.cluster.local:9094"
+    overrideListeners: "CLIENT://:9092,INTERNAL://:9094,EXTERNAL://:9095,CONTROLLER://:9097"
 
   # sals:
   # tls: 
@@ -149,7 +153,7 @@ kafka:
                                    # externalAccess Nodeport모드 && autoDiscovery 미사용 && externalIPs 미등록시
                                      # advertisedListener로 "EXTERNAL://{공인IP}:{개별nodeport}"가 자동등록된다.
                                      # EC2에선 괜찮지만, 일반적으로 공인IP를 통한 포트포워딩이 없으므로 사용불가
-        extraPorts: # []
+        extraPorts: # []  ###test
           - name: tcp-custom-public
             port: 9097
             targetPort: tcp-custom # 9097
