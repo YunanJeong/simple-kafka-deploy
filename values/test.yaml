@@ -44,7 +44,11 @@ kafka:
       protocol: PLAINTEXT          # SASL_PLAINTEXT
     external:
       protocol: PLAINTEXT          # SASL_PLAINTEXT
-    extraListeners: []
+    extraListeners: # []
+      - name: CUSTOM
+        containerPort: 9097
+        protocol: PLAINTEXT
+        sslClientAuth: ""
     advertisedListeners: ''        # e.g. "EXTERNAL://172.19.0.126:30003,CLIENT://test-kafka-controller-0.test-kafka-controller-headless.default.svc.cluster.local:9092,INTERNAL://test-kafka-controller-0.test-kafka-controller-headless.default.svc.cluster.local:9094"
 
   # sals:
