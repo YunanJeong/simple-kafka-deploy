@@ -53,7 +53,9 @@ kafka:
         containerPort: 9097
         protocol: PLAINTEXT
         sslClientAuth: ""
-    advertisedListeners: ''        # e.g. "EXTERNAL://172.19.0.126:30003,CLIENT://test-kafka-controller-0.test-kafka-controller-headless.default.svc.cluster.local:9092,INTERNAL://test-kafka-controller-0.test-kafka-controller-headless.default.svc.cluster.local:9094"
+
+    # 임시발급주소 => 테스트용으로 git 업로드되므로 실사용X
+    advertisedListeners: "CUSTOM://172.31.33.64:9097,EXTERNAL://54.180.78.213:9095,CLIENT://test-kafka-controller-0.test-kafka-controller-headless.default.svc.cluster.local:9092,INTERNAL://test-kafka-controller-0.test-kafka-controller-headless.default.svc.cluster.local:9094"        # e.g. "EXTERNAL://172.19.0.126:30003,CLIENT://test-kafka-controller-0.test-kafka-controller-headless.default.svc.cluster.local:9092,INTERNAL://test-kafka-controller-0.test-kafka-controller-headless.default.svc.cluster.local:9094"
     overrideListeners: "CUSTOM://:9097,CLIENT://:9092,INTERNAL://:9094,EXTERNAL://:9095,CONTROLLER://:9093"
 
   # sals:
