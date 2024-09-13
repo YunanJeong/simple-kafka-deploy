@@ -34,7 +34,7 @@ kafka:
     # default.replication.factor=1
     # 신규생성 토픽의 segment(roll) 분할 기간 단위  (default: 7일)
     log.roll.ms=172800000
-    
+
   listeners:
     client:
       protocol: PLAINTEXT          # SASL_PLAINTEXT, # https://github.com/bitnami/charts/issues/19128
@@ -196,7 +196,7 @@ kafka:
 
 
 connect:
-  enabled: true
+  enabled: false
   replicaCount: 1
   image:
     repository: confluentinc/cp-kafka-connect     # registry 포함 표기 가능. 없으면 container runtime의 default
