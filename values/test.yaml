@@ -45,8 +45,9 @@ kafka:
     external:
       protocol: PLAINTEXT          # SASL_PLAINTEXT
 
-    #  extraListeners=> bitnami/kafka의 _helpers.tpl 함수 오류로 사용이 애매함, advertisedListener 항목엔 들어가는데 listener에 들어가지 않음
-    # 이 옵션 쓰려면 overridListeners로 전체 listeners를 덮어쓰기해야함 (tpl 적용안됨)
+    #  extraListeners=> bitnami/kafka의 _helpers.tpl 함수참고
+    # extraListeners에 추가한 값은 advertisedListener 항목엔 자동추가되는데, listener엔 자동추가 안됨
+    # 이 옵션 쓰려면 overrideListeners값에 listeners를 입력해줘야야함
     extraListeners: # [] ###test
       - name: CUSTOM
         containerPort: 9097
@@ -99,7 +100,7 @@ kafka:
       mountPath: /opt/bitnami/kafka/logs
   
   service:
-    type: LoadBalancer
+    type: NodePort
     ports:
       client: 9092                 # "tcp-client"   (allows access from localhost machine)
       external: 9095               # "tcp-external" (requires externalAccess.enabled=true)
