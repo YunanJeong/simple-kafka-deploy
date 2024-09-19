@@ -79,7 +79,7 @@ kafka:
   
   # controller: KRAFT모드 Broker
   controller:                      
-    replicaCount: 3
+    replicaCount: 1
     controllerOnly: false          # true: broker 기능을 포함하지 않는 controller 실행 
     zookeeperMigrationMode: false  # true: 주키퍼,크래프트 동시실행가능(마이그레이션목적)
     extraEnvVars: []               # Kafka Pod에 환경변수 "추가"
