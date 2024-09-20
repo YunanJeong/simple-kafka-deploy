@@ -112,7 +112,11 @@ kafka:
       size: 8Gi
       mountPath: /opt/bitnami/kafka/logs
   
+  # 이 서비스는 외부접근을 모든 broker노드 중 하나로 랜덤 연결 시켜준다.
+  # 첫 연결시에는 이 서비스로 접근하는게 적합하지만, 이후 지속연결동안은 특정 broker가 확정되어야 한다.
+  # 따라서 advertised.listener는 이 서비스의 주소가 아닌, 아래 externalAccess로 설정된 특정 broker의 주소를 반환해야한다.
   service:
+    enabled: false
     type: LoadBalancer
     ports:
       client: 9092                 # "tcp-client"   (allows access from localhost machine)
