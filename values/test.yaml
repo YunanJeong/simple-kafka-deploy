@@ -170,7 +170,7 @@ kafka:
         extraPorts: # []  ###test
           - name: tcp-custom-public
             port: 9097
-            targetPort: tcp-custom # 9097
+            targetPort: 9097 # tcp-custom # 9097
             nodePort: 30004
             # nodePort: "{{ index $.Values.externalAccess.controller.service.nodePorts $i }}"
 
