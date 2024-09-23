@@ -133,7 +133,7 @@ kafka:
   externalAccess:
     enabled: true                  # 위 "tcp-external"을 쓰려면 true 필요
     autoDiscovery:
-      enabled: true               # false시, 아래 네트워크 섹션 직접 설정 필요(nodeports, loadBalancerIps, externalIps 등)
+      enabled: false               # false시, 아래 네트워크 섹션 직접 설정 필요(nodeports, loadBalancerIps, externalIps 등)
       image:
         registry: docker.io        # 오프라인 환경에서 docker.io프록시 or 사설registry로 설정                                
     
