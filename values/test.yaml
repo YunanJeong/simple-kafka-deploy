@@ -173,7 +173,7 @@ kafka:
                                      # EC2에선 괜찮지만, 일반적으로 공인IP를 통한 포트포워딩이 없으므로 사용불가
         extraPorts: # []  ###test
           - name: tcp-custom-public
-            port: 9097
+            port: 9096
             targetPort: 9097 # tcp-custom # 9097
             nodePort: 30004
             # nodePort: "{{ index $.Values.externalAccess.controller.service.nodePorts $i }}"
