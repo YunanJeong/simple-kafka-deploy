@@ -66,7 +66,7 @@ kafka:
     # 결론: Kafka에서 포트별로 트래픽을 나누어 내부망접근, 외부망 접근을 구분하는 것은 가능하지만,
     # => 이 헬름차트로 구현하려면 매우 번거로운 편이다(특히, 클러스터링 구성시).
     # => 여러 경로의 외부접근(EXTERNAL)이 있을 것이라고 고려되지 않았음.
-    advertisedListeners: "CUSTOM://15.165.39.243:30004,EXTERNAL://172.31.60.204:30003,CLIENT://test-kafka-controller-0.test-kafka-controller-headless.default.svc.cluster.local:9092,INTERNAL://test-kafka-controller-0.test-kafka-controller-headless.default.svc.cluster.local:9094"  
+    # advertisedListeners: "CUSTOM://15.165.39.243:30004,EXTERNAL://172.31.60.204:30003,CLIENT://test-kafka-controller-0.test-kafka-controller-headless.default.svc.cluster.local:9092,INTERNAL://test-kafka-controller-0.test-kafka-controller-headless.default.svc.cluster.local:9094"  
     # e.g. "EXTERNAL://172.19.0.126:30003,CLIENT://test-kafka-controller-0.test-kafka-controller-headless.default.svc.cluster.local:9092,INTERNAL://test-kafka-controller-0.test-kafka-controller-headless.default.svc.cluster.local:9094"
     overrideListeners: "CUSTOM://:9097,EXTERNAL://:9095,CLIENT://:9092,INTERNAL://:9094,CONTROLLER://:9093"
 
@@ -133,7 +133,7 @@ kafka:
   externalAccess:
     enabled: true                  # 위 "tcp-external"을 쓰려면 true 필요
     autoDiscovery:
-      enabled: false               # false시, 아래 네트워크 섹션 직접 설정 필요(nodeports, loadBalancerIps, externalIps 등)
+      enabled: true               # false시, 아래 네트워크 섹션 직접 설정 필요(nodeports, loadBalancerIps, externalIps 등)
       image:
         registry: docker.io        # 오프라인 환경에서 docker.io프록시 or 사설registry로 설정                                
     
