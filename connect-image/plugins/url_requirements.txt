@@ -1,0 +1,1 @@
+https://d2p6pa21dvn84.cloudfront.net/api/plugins/debezium/debezium-connector-postgresql/versions/2.5.4/debezium-debezium-connector-postgresql-2.5.4.zip

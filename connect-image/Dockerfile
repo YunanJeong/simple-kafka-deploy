@@ -13,6 +13,12 @@ COPY config/* /opt/bitnami/kafka/config/
 COPY plugins/* /opt/bitnami/kafka/plugins/
 
 ######################################
+# 외부파일 다운로드 (외부저장소 또는 내 저장소 링크 사용)
+######################################
+RUN cd /opt/bitnami/kafka/plugins \
+    && wget -i url_requirements.txt
+
+######################################
 # 커넥터 등 플러그인 설치
 ######################################
 # 각 zip 파일 압축해제 후 삭제
