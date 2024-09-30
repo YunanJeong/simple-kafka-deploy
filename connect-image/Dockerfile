@@ -2,7 +2,7 @@ FROM bitnami/kafka:3.5.1
 
 USER root
 RUN apt-get update
-RUN apt-get install -y curl dnsutils netcat unzip vim iputils-ping jq gettext
+RUN apt-get install -y curl dnsutils netcat unzip vim iputils-ping jq gettext wget
 
 RUN echo 'alias ll="ls -alh"' >> ~/.bashrc
 
