@@ -8,6 +8,7 @@ global:
   imageRegistry: docker.io              # bitnami 계열 글로벌
 
 kafka:
+  enabled: true
   image:
     registry: docker.io
 
@@ -33,6 +34,8 @@ kafka:
              # default.replication.factor=1
              # 신규생성 토픽의 segment(roll) 분할 기간 단위  (default: 7일)
              # log.roll.ms=604800000
+             # 신규생성 토픽에서 Record의 메타데이터 timestamp 타입  (default: CreateTime)
+             # log.message.timestamp.type=LogAppendTime
   
   listeners:
     # https://github.com/bitnami/charts/issues/19128
@@ -46,6 +49,7 @@ kafka:
       protocol: PLAINTEXT  # SASL_PLAINTEXT
     extraListeners: []
     advertisedListeners: ""
+    overrideListeners: ""
 
   # sals:
   # tls: 

@@ -17,16 +17,16 @@ Kubernetes용 대시보드, Kafka, Kafka-ui, Kafka-connect를 포함한다.
 
 ```sh
 # broker 3, connect 1, private ip, KRAFT
-helm install test https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v2.0.3/skafka-2.0.3.tgz \
--f https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v2.0.3/kraft-multi.yaml
+helm install test https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v2.0.4/skafka-2.0.4.tgz \
+-f https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v2.0.4/kraft-multi.yaml
 ```
 
 ### public (public ip로 외부노출되는 환경, EC2)
 
 ```sh
 # broker 3, connect 1, public ip, KRAFT
-helm install test https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v2.0.3/skafka-2.0.3.tgz \
--f https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v2.0.3/kraft-multi.yaml \
+helm install test https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v2.0.4/skafka-2.0.4.tgz \
+-f https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v2.0.4/kraft-multi.yaml \
 --set "kafka.externalAccess.autoDiscovery.enabled=false" \
 --set "kafka.externalAccess.controller.service.nodePorts={30003,30004,30005}"
 ```
@@ -38,14 +38,14 @@ helm install test https://github.com/YunanJeong/simple-kafka-deploy/releases/dow
 ```shell
 # helm install {releaseName} {chart} -f {customValue.yaml}
 # broker 3, connect 1, private ip, KRAFT
-helm install test skafka-2.0.3.tgz -f values/kraft-multi.yaml
+helm install test skafka-2.0.4.tgz -f values/kraft-multi.yaml
 ```
 
 ### public
 
 ```shell
 # broker 3, connect 1, public ip, KRAFT
-helm install test skafka-2.0.3.tgz -f values/kraft-multi.yaml \
+helm install test skafka-2.0.4.tgz -f values/kraft-multi.yaml \
 --set "kafka.externalAccess.autoDiscovery.enabled=false" \
 --set "kafka.externalAccess.controller.service.nodePorts={30003,30004,30005}"
 ```
@@ -116,10 +116,10 @@ kubectl delete pvc {pvcName}
 
 ```sh
 # 차트의 default value 참고하여 custom value 파일 작성
-helm show values skafka-2.0.3.tgz
+helm show values skafka-2.0.4.tgz
 
 # 업데이트
-helm upgrade test skafka-2.0.3.tgz -f values/my-kraft-multi.yaml
+helm upgrade test skafka-2.0.4.tgz -f values/my-kraft-multi.yaml
 ```
 
 ## skafka 차트 수정 시 참고
