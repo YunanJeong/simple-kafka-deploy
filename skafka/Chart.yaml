@@ -30,6 +30,13 @@ dependencies:
     version: 25.3.3
     repository: https://charts.bitnami.com/bitnami
     condition: kafka.enabled
+  # 서브차트 kafka의 서브차트 common을 직접 사용시 각 서브차트간 커플링이 심해진다.
+  # 따라서 최상위 차트의 서브차트로 common을 추가해준다.
+  - name: common
+    version: 2.x.x
+    repository: oci://registry-1.docker.io/bitnamicharts
+    tags:
+      - bitnami-common
 
   - name: kafka-connect
     version: 0.2.1
@@ -44,7 +51,7 @@ dependencies:
     condition: k8dashboard.enabled
     
   - name: kafka-ui
-    version: 0.7.2
+    version: 0.7.6
     repository: https://provectus.github.io/kafka-ui-charts
     alias: ui4kafka
     condition: ui4kafka.enabled
