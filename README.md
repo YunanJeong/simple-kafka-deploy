@@ -39,6 +39,10 @@ helm install test https://github.com/YunanJeong/simple-kafka-deploy/releases/dow
 # helm install {releaseName} {chart} -f {customValue.yaml}
 # broker 3, connect 1, private ip, KRAFT
 helm install test skafka-2.0.4.tgz -f values/kraft-multi.yaml
+
+# broker 1, connect 1, private ip, KRAFT
+helm install test skafka-2.0.4.tgz -f values/kraft-multi.yaml --set "kafka.controller.replicaCount=1"
+  
 ```
 
 ### public
@@ -48,6 +52,12 @@ helm install test skafka-2.0.4.tgz -f values/kraft-multi.yaml
 helm install test skafka-2.0.4.tgz -f values/kraft-multi.yaml \
 --set "kafka.externalAccess.autoDiscovery.enabled=false" \
 --set "kafka.externalAccess.controller.service.nodePorts={30003,30004,30005}"
+
+# broker 1, connect 1, public ip, KRAFT
+helm install test skafka-2.0.4.tgz -f values/kraft-multi.yaml \
+--set "kafka.externalAccess.autoDiscovery.enabled=false" \
+--set "kafka.externalAccess.controller.service.nodePorts={30003}"
+--set "kafka.controller.replicaCount=1"
 ```
 
 ## Access Kafka
