@@ -1,1 +1,3 @@
 .vscode
+reference/kafka-connect
+reference/*.tgz
