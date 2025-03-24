@@ -36,6 +36,13 @@ kafka:
     # 신규생성 토픽에서 Record의 메타데이터 timestamp 타입  # default: CreateTime
     # log.message.timestamp.type=LogAppendTime
 
+    # KRaft 모드에서 ACL 활성화
+    authorizer.class.name=org.apache.kafka.metadata.authorizer.StandardAuthorizer
+    
+    # ACL ANONYMOUS 임시 허용(테스트용)
+    allow.everyone.if.no.acl.found=true
+    # super.users=User:admin
+
   # server.properties의 listener.security.protocol.map 설정
   listeners:
     client:
@@ -60,13 +67,12 @@ kafka:
     enabledMechanisms: PLAIN,SCRAM-SHA-256,SCRAM-SHA-512
 
     ## Credentials for client communications.
-    ## @param sasl.client.users Comma-separated list of usernames for client communications when SASL is enabled
-    ## @param sasl.client.passwords Comma-separated list of passwords for client communications when SASL is enabled, must match the number of client.users
-    ##
     # listener(CLIENT, CONTROLLER, INTERBROKER) 별 다른 SASL 사용자를 지정가능
     # 차트 설계상 sasl.client설정은 두 listener(CLIENT, EXTERNAL)에 함께 반영됨
     # SASL 활성화 여부: listener 별 protocol을 SASL_PLAINTEXT로 지정하면 개별 활성화
     # ACL 미설정시 모든 권한을 가짐 # 한 유저라도 ACL설정시, 나머지 유저의 default 권한은 없음
+    # production ready에선 Secret 또는 환경변수로 처리 필수
+    # 테스트 => kcat -b localhost:9095 -L  -X security.protocol=SASL_PLAINTEXT -X sasl.mechanisms=PLAIN -X sasl.username=user1 -X sasl.password=1234
     client:
       users:
         - user1
@@ -212,7 +218,7 @@ kafka:
       enabled: false
 
   provisioning:
-    enabled: false
+    enabled: true
     topics: []
     numPartitions: 1         # 초기 생성할 topic들의 partition 수 (broker의 default 설정 아님)
     replicationFactor: 1     # 초기 생성할 topic들의 replicationFactors (broker의 default 설정 아님)
@@ -231,7 +237,12 @@ kafka:
     ##      --command-config $CLIENT_CONF
     ##      --list"
     ##
-    extraProvisioningCommands: []
+    # Helm tpl (Release.Name) 안됨
+    # ACL설정 전, extraConfig(server.properties)에서 ACL 활성화 필요
+    extraProvisioningCommands: # []
+      - echo "Allow user to consume from any topic"
+      - "/opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server test-kafka:9092 --add --allow-principal User:user1 --operation All --topic '*'"
+      
 
 
   kraft:
