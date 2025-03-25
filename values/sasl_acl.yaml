@@ -259,6 +259,8 @@ kafka:
     extraEnvVars: # []
       - name: MY_KAFKA_SVC
         value: "{{ .Release.Name }}-kafka:9092"
+      - name: ASTERISK
+        value: "*"
 
     ## @param provisioning.extraProvisioningCommands Extra commands to run to provision cluster resources
     ## - echo "Allow user to consume from any topic"
@@ -274,7 +276,7 @@ kafka:
     ##      --command-config $CLIENT_CONF
     ##      --list"
     ##
-    # Helm tpl (Release.Name) 안됨
+    # Helm tpl (Release.Name) 안됨  # 따옴표 주의
     # ACL설정 전, extraConfig(server.properties)에서 ACL 활성화 필요
     extraProvisioningCommands: # []
       - echo "Basic ACLs for internal communication"
@@ -282,21 +284,34 @@ kafka:
       # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:inter_broker_user --operation Read --operation Write --topic __consumer_offsets
       # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:inter_broker_user --operation Read --operation Write --topic __transaction_state
       # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:inter_broker_user --operation ClusterAction --cluster
-      # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:inter_broker_user --operation Create --operation Delete --topic '*'
-      # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:inter_broker_user --operation Read --operation Write --group '*'
+      # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:inter_broker_user --operation Create --operation Delete --topic *
+      # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:inter_broker_user --operation Read --operation Write --group *
       # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:inter_broker_user --operation IdempotentWrite --cluster
 
       # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:controller_user --operation Describe --cluster
       # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:controller_user --operation Alter --cluster
-      # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:controller_user --operation Describe --topic '*'
-      # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:controller_user --operation Alter --topic '*'
+      # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:controller_user --operation Describe --topic *
+      # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:controller_user --operation Alter --topic *
       
       # 모든 주제에 대한 읽기 및 쓰기 권한 (테스트용)
+      - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:user1 --operation All --topic $ASTERISK
+      - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:user1 --operation All --topic $*
       - "/opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:user1 --operation All --topic *"
-
-
-      
-
+      - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:user1 --operation All --topic '*'
+      - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:user1 --operation All --topic "*"
+      - "/opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:user1 --operation All --topic '*'"
+      - "/opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:user1 --operation All --topic \'*\'"
+      - "/opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:user1 --operation All --topic \\*"
+      - "/opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:user1 --operation All --topic \\'*\\'"
+      - >-
+        /opt/bitnami/kafka/bin/kafka-acls.sh
+        --bootstrap-server $MY_KAFKA_SVC
+        --add
+        --allow-principal User:user1
+        --operation All
+        --topic '*'
+      - |-
+        /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:user1 --operation All --topic \'*\'
 
   kraft:
     enabled: true
