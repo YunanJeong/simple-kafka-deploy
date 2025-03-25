@@ -36,21 +36,23 @@ kafka:
     # 신규생성 토픽에서 Record의 메타데이터 timestamp 타입  # default: CreateTime
     # log.message.timestamp.type=LogAppendTime
 
-    # KRaft 모드에서 ACL 활성화
+    # KRaft 모드에서 ACL 활성화  # 활성화시 브로커 간 내부통신 권한도 허용필수
     authorizer.class.name=org.apache.kafka.metadata.authorizer.StandardAuthorizer
     
-    # ACL ANONYMOUS 임시 허용(테스트용)
-    allow.everyone.if.no.acl.found=true
-    # super.users=User:admin
+    # 특정 리소스에 대한 ACL이 없을 경우 모든 유저에게 접근허용 (테스트용)
+    # allow.everyone.if.no.acl.found=true
+    
+    # ACL 슈퍼 유저
+    super.users=User:admin;User:ANONYMOUS;User:inter_broker_user;User:controller_user
 
   # server.properties의 listener.security.protocol.map 설정
   listeners:
     client:
       protocol: PLAINTEXT          # SASL_PLAINTEXT, # https://github.com/bitnami/charts/issues/19128
     controller:
-      protocol: PLAINTEXT          # SASL_PLAINTEXT
+      protocol: SASL_PLAINTEXT          # SASL_PLAINTEXT
     interbroker:
-      protocol: PLAINTEXT          # SASL_PLAINTEXT
+      protocol: SASL_PLAINTEXT          # SASL_PLAINTEXT
     external:
       protocol: SASL_PLAINTEXT          # SASL_PLAINTEXT
     extraListeners: []
@@ -64,20 +66,44 @@ kafka:
     ## @param sasl.enabledMechanisms Comma-separated list of allowed SASL mechanisms when SASL listeners are configured. Allowed types: `PLAIN`, `SCRAM-SHA-256`, `SCRAM-SHA-512`, `OAUTHBEARER`
     ## NOTE: At the moment, Kafka Raft mode does not support SCRAM, that is why only PLAIN is configured.
     ##
-    enabledMechanisms: PLAIN,SCRAM-SHA-256,SCRAM-SHA-512
+    enabledMechanisms: PLAIN  #,SCRAM-SHA-256,SCRAM-SHA-512
+
+    ## Credentials for inter-broker communications.
+    ## @param sasl.interbroker.user Username for inter-broker communications when SASL is enabled
+    ## @param sasl.interbroker.password Password for inter-broker communications when SASL is enabled. If not set and SASL is enabled for the controller listener, a random password will be generated.
+    ## @param sasl.interbroker.clientId Client ID for inter-broker communications when SASL is enabled with mechanism OAUTHBEARER
+    ## @param sasl.interbroker.clientSecret Client Secret for inter-broker communications when SASL is enabled with mechanism OAUTHBEARER. If not set and SASL is enabled for the controller listener, a random secret will be generated.
+    ##
+    interbroker:
+      user: inter_broker_user
+      password: ""
+      clientId: inter_broker_client
+      clientSecret: ""
+    ## Credentials for controller communications.
+    ## @param sasl.controller.user Username for controller communications when SASL is enabled
+    ## @param sasl.controller.password Password for controller communications when SASL is enabled. If not set and SASL is enabled for the inter-broker listener, a random password will be generated.
+    ## @param sasl.controller.clientId Client ID for controller communications when SASL is enabled with mechanism OAUTHBEARER
+    ## @param sasl.controller.clientSecret Client Secret for controller communications when SASL is enabled with mechanism OAUTHBEARER. If not set and SASL is enabled for the inter-broker listener, a random secret will be generated.
+    ##
+    controller:
+      user: controller_user
+      password: ""
+      clientId: controller_broker_client
+      clientSecret: ""
 
     ## Credentials for client communications.
     # listener(CLIENT, CONTROLLER, INTERBROKER) 별 다른 SASL 사용자를 지정가능
     # 차트 설계상 sasl.client설정은 두 listener(CLIENT, EXTERNAL)에 함께 반영됨
     # SASL 활성화 여부: listener 별 protocol을 SASL_PLAINTEXT로 지정하면 개별 활성화
-    # ACL 미설정시 모든 권한을 가짐 # 한 유저라도 ACL설정시, 나머지 유저의 default 권한은 없음
+    # ACL 비활성화시 모든 유저가 모든 권한을 가짐 # ACL활성화 후 개별규칙 미설정시 기본 권한 없음
     # production ready에선 Secret 또는 환경변수로 처리 필수
     # 테스트 => kcat -b localhost:9095 -L  -X security.protocol=SASL_PLAINTEXT -X sasl.mechanisms=PLAIN -X sasl.username=user1 -X sasl.password=1234
     client:
       users:
+        - admin
         - user1
         - user2
-      passwords: "1111,2222"
+      passwords: "0000,1111,2222"
 
     ## @param sasl.existingSecret Name of the existing secret containing credentials for clientUsers, interBrokerUser, controllerUser and zookeeperUser
     ## Create this secret running the command below where SECRET_NAME is the name of the secret you want to create:
@@ -223,6 +249,17 @@ kafka:
     numPartitions: 1         # 초기 생성할 topic들의 partition 수 (broker의 default 설정 아님)
     replicationFactor: 1     # 초기 생성할 topic들의 replicationFactors (broker의 default 설정 아님)
 
+
+    ## @param provisioning.extraEnvVars Extra environment variables to add to the provisioning pod
+    ## e.g:
+    ## extraEnvVars:
+    ##   - name: KAFKA_CFG_BACKGROUND_THREADS
+    ##     value: "10"
+    ##
+    extraEnvVars: # []
+      - name: MY_KAFKA_SVC
+        value: "{{ .Release.Name }}-kafka:9092"
+
     ## @param provisioning.extraProvisioningCommands Extra commands to run to provision cluster resources
     ## - echo "Allow user to consume from any topic"
     ## - >-
@@ -240,8 +277,24 @@ kafka:
     # Helm tpl (Release.Name) 안됨
     # ACL설정 전, extraConfig(server.properties)에서 ACL 활성화 필요
     extraProvisioningCommands: # []
-      - echo "Allow user to consume from any topic"
-      - "/opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server test-kafka:9092 --add --allow-principal User:user1 --operation All --topic '*'"
+      - echo "Basic ACLs for internal communication"
+
+      # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:inter_broker_user --operation Read --operation Write --topic __consumer_offsets
+      # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:inter_broker_user --operation Read --operation Write --topic __transaction_state
+      # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:inter_broker_user --operation ClusterAction --cluster
+      # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:inter_broker_user --operation Create --operation Delete --topic '*'
+      # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:inter_broker_user --operation Read --operation Write --group '*'
+      # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:inter_broker_user --operation IdempotentWrite --cluster
+
+      # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:controller_user --operation Describe --cluster
+      # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:controller_user --operation Alter --cluster
+      # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:controller_user --operation Describe --topic '*'
+      # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:controller_user --operation Alter --topic '*'
+      
+      # 모든 주제에 대한 읽기 및 쓰기 권한 (테스트용)
+      - "/opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:user1 --operation All --topic *"
+
+
       
 
 
@@ -267,6 +320,11 @@ connect:
     CONNECT_BOOTSTRAP_SERVERS: "{{ .Release.Name }}-kafka:9092"
     CONNECT_REST_PORT: "8083"
     # KAFKA_HEAP_OPTS: "-Xms4G -Xmx4G"
+    # CONNECT_EXTRA_CONFIG: |
+    #   security.protocol=SASL_PLAINTEXT
+    #   sasl.mechanism=PLAIN
+    #   sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="admin" password="0000";
+
   extraVolumeMounts: # []
     - name: plugin
       mountPath: /usr/share/confluent-hub-components
