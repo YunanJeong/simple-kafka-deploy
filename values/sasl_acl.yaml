@@ -234,7 +234,7 @@ kafka:
       containerPorts:
         metrics: 9308
     jmx:            
-      enabled: false
+      enabled: true
       kafkaJmxPort: 5555
       image:
         registry: docker.io  # bitnami/jmx-exporter
