@@ -103,7 +103,7 @@ kafka:
         - admin
         - user1
         - user2
-      passwords: "0000,1111,2222"
+      passwords: ${MY_PASSWORD}  # "0000,1111,2222"
 
     ## @param sasl.existingSecret Name of the existing secret containing credentials for clientUsers, interBrokerUser, controllerUser and zookeeperUser
     ## Create this secret running the command below where SECRET_NAME is the name of the secret you want to create:
@@ -111,7 +111,12 @@ kafka:
     ## The client secrets are only required when using oauthbearer as sasl mechanism. 
     ## Client, interbroker and controller passwords are only required if the sasl mechanism includes something other than oauthbearer.
     ## +
-    existingSecret: ""
+    # Secret 사용시
+      # value파일에 기입된 모든 passwords는 무시됨. interbroker, controller를 위한 패스워드 자동생성도 비활성화
+      # Secret 내부에는 카프카 구성시 필요한 모든 패스워드 값 할당 필요 (key 이름은 차트template에서 고정)
+    # 다음 명령어 또는 yaml파일로 Secret 생성 후 사용
+      # kubectl create secret generic sasl-secret-sample --from-literal=client-passwords=CLIENT_PASSWORD1,CLIENT_PASSWORD2 --from-literal=inter-broker-password=INTER_BROKER_PASSWORD --from-literal=inter-broker-client-secret=INTER_BROKER_CLIENT_SECRET --from-literal=controller-password=CONTROLLER_PASSWORD --from-literal=controller-client-secret=CONTROLLER_CLIENT_SECRET
+    existingSecret: "sasl-secret-sample"
 
   # tls: 
   extraEnvVars: []                 # 환경변수 "추가"
@@ -245,7 +250,8 @@ kafka:
 
   provisioning:
     enabled: true
-    topics: []
+    topics: # []     # 초기 생성할 topic들의 이름
+      - name: test-topic
     numPartitions: 1         # 초기 생성할 topic들의 partition 수 (broker의 default 설정 아님)
     replicationFactor: 1     # 초기 생성할 topic들의 replicationFactors (broker의 default 설정 아님)
 
@@ -279,7 +285,6 @@ kafka:
     # ACL설정 전, extraConfig(server.properties)에서 ACL 활성화 필요
     extraProvisioningCommands: # []
       - echo "Basic ACLs for internal communication"
-      
 
       # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:inter_broker_user --operation Read --operation Write --topic __consumer_offsets
       # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:inter_broker_user --operation Read --operation Write --topic __transaction_state
