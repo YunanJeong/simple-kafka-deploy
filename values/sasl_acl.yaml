@@ -259,8 +259,6 @@ kafka:
     extraEnvVars: # []
       - name: MY_KAFKA_SVC
         value: "{{ .Release.Name }}-kafka:9092"
-      - name: ASTERISK
-        value: "*"
 
     ## @param provisioning.extraProvisioningCommands Extra commands to run to provision cluster resources
     ## - echo "Allow user to consume from any topic"
@@ -270,16 +268,18 @@ kafka:
     ##   --command-config $CLIENT_CONF
     ##   --add
     ##   --allow-principal User:user
-    ##   --consumer --topic '*'
+    ##   --consumer --topic '*'                   # 기본예시(--topic '*') 대신 --topic=* 로 처리할 것
     ## - "/opt/bitnami/kafka/bin/kafka-acls.sh
     ##      --bootstrap-server $KAFKA_SERVICE
     ##      --command-config $CLIENT_CONF
     ##      --list"
     ##
-    # Helm tpl (Release.Name) 안됨  # 따옴표 주의
+
+    # 토픽명 지정시 --topic=* 와 같이 표기 필요 (assign(=)기호 없을시, 따옴표와 백슬래시를 어떻게 배치해도 이스케이프 처리가 의도대로 되지 않음)
     # ACL설정 전, extraConfig(server.properties)에서 ACL 활성화 필요
     extraProvisioningCommands: # []
       - echo "Basic ACLs for internal communication"
+      
 
       # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:inter_broker_user --operation Read --operation Write --topic __consumer_offsets
       # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:inter_broker_user --operation Read --operation Write --topic __transaction_state
@@ -293,25 +293,12 @@ kafka:
       # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:controller_user --operation Describe --topic *
       # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:controller_user --operation Alter --topic *
       
-      # 모든 주제에 대한 읽기 및 쓰기 권한 (테스트용)
-      - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:user1 --operation All --topic $ASTERISK
-      - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:user1 --operation All --topic $*
-      - "/opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:user1 --operation All --topic *"
-      - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:user1 --operation All --topic '*'
-      - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:user1 --operation All --topic "*"
-      - "/opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:user1 --operation All --topic '*'"
-      - "/opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:user1 --operation All --topic \'*\'"
-      - "/opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:user1 --operation All --topic \\*"
-      - "/opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:user1 --operation All --topic \\'*\\'"
-      - >-
-        /opt/bitnami/kafka/bin/kafka-acls.sh
-        --bootstrap-server $MY_KAFKA_SVC
-        --add
-        --allow-principal User:user1
-        --operation All
-        --topic '*'
-      - |-
-        /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:user1 --operation All --topic \'*\'
+      # user1에게 모든 토픽 읽기 및 쓰기 권한 부여
+      - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:user1 --operation All --topic=*
+
+      # user1에게 내부 토픽 숨기기 (prefix로 멀티 토픽 지정)
+      - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --deny-principal User:user1 --operation All --topic=kafka-connect- --resource-pattern-type prefixed
+      - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --deny-principal User:user1 --operation All --topic=__ --resource-pattern-type prefixed
 
   kraft:
     enabled: true
