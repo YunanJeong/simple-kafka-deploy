@@ -42,7 +42,8 @@ kafka:
     # 특정 리소스에 대한 ACL이 없을 경우 모든 유저에게 접근허용 (테스트용)
     # allow.everyone.if.no.acl.found=true
     
-    # ACL 슈퍼 유저
+    # ACL 슈퍼 유저 # 관리자 및 내부통신용 계정들을 허용
+    # SASL 인증이 없는 요청은 ANONYMOUS로 취급된다. # 일반적으로는 허용하면 안되지만, 클러스터 내부 클라이언트가 접근이 용이하도록 권한을 부여
     super.users=User:admin;User:ANONYMOUS;User:inter_broker_user;User:controller_user
 
   # server.properties의 listener.security.protocol.map 설정
