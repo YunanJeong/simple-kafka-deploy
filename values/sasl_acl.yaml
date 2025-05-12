@@ -68,7 +68,8 @@ kafka:
     ## NOTE: At the moment, Kafka Raft mode does not support SCRAM, that is why only PLAIN is configured.
     ##
     enabledMechanisms: PLAIN  #,SCRAM-SHA-256,SCRAM-SHA-512
-
+    interBrokerMechanism: PLAIN
+    controllerMechanism: PLAIN
     ## Credentials for inter-broker communications.
     ## @param sasl.interbroker.user Username for inter-broker communications when SASL is enabled
     ## @param sasl.interbroker.password Password for inter-broker communications when SASL is enabled. If not set and SASL is enabled for the controller listener, a random password will be generated.
@@ -104,7 +105,7 @@ kafka:
         - admin
         - user1
         - user2
-      passwords: ${MY_PASSWORD}  # "0000,1111,2222"
+      passwords: ${KAKFA_PASSWORD_SAMPLES}  # "00000,11111,22222"
 
     ## @param sasl.existingSecret Name of the existing secret containing credentials for clientUsers, interBrokerUser, controllerUser and zookeeperUser
     ## Create this secret running the command below where SECRET_NAME is the name of the secret you want to create:
