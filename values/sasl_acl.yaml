@@ -184,11 +184,13 @@ kafka:
       service:                     # Broker 당 1개씩 생성되는 Service
         type: NodePort            
                                    ##################################################################################################
-                                   # K8s기반 Kafka에서 외부 Client와 Broker 간 통신과정
+                                   # K8s기반 Kafka클러스터에서 외부 Client와 Broker 간 통신과정
                                      # 1. Client가 LoadBalancer의 주소(tcp-external)로 접근
-                                     # 2. LoadBalancer는 Client의 최초 접근 트래픽을 Broker 1개에 랜덤매칭하여 포워딩  (K8s의 LoadBalancer 기능)
-                                     # 3. 해당 Broker는 자신에게 직접 접근가능한 주소를 Kafka Client에게 전달          (Kafka의 advertised.listener 기능)
-                                     # 4. Kafka Client는 connection이 유지되는 동안 Broker로부터 받은 주소로 통신
+                                     # 2. LoadBalancer는 Client의 최초 접근 트래픽을 Broker 1개에 랜덤매칭하여 전달                 (K8s의 LoadBalancer Service 기능)
+                                     # 3. 해당 Broker는 모든 Broker의 advertised.listener(직접 접근 가능한 주소)를 Client에게 전달  (Kafka의 기능)
+                                     #   - Tip) 모든 Broker는 서로의 advertised.listener 정보를 동기화하여 이미 갖고있음
+                                     #   - Tip) 즉, Client는 어떤 경로로든 하나의 Broker에 접근하면 모든 Broker에 직접 접근 가능한 주소를 획득
+                                     # 4. Kafka Client는 connection이 유지되는 동안 Broker로부터 받은 주소로 통신 (각 리더 파티션 배치에 따라 개별 Broker와 직접통신)
 
                                      # => kafka.service: 1번 과정의 "LoadBalancer 접근 방법"을 결정
                                      # => kakfa.externalAccess.controller.service: 4번 과정의 "개별 Broker 접근 방법"을 결정
