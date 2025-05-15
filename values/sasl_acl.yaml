@@ -69,8 +69,8 @@ kafka:
     ##
     enabledMechanisms: PLAIN,SCRAM-SHA-256 # PLAIN  #,SCRAM-SHA-256,SCRAM-SHA-512
     interBrokerMechanism: SCRAM-SHA-256 # PLAIN
-    controllerMechanism: PLAIN  # Controller에 SCRAM 적용불가능한 이슈가 있음
-    ## Credentials for inter-broker communications.
+    controllerMechanism: PLAIN  # KRaft Controller에 SCRAM 적용불가능한 이슈가 있음 # https://issues.apache.org/jira/browse/KAFKA-15513  # https://github.com/bitnami/containers/issues/41415#issuecomment-2137523470
+    ## Credentials for inter-broker communications. 
     ## @param sasl.interbroker.user Username for inter-broker communications when SASL is enabled
     ## @param sasl.interbroker.password Password for inter-broker communications when SASL is enabled. If not set and SASL is enabled for the controller listener, a random password will be generated.
     ## @param sasl.interbroker.clientId Client ID for inter-broker communications when SASL is enabled with mechanism OAUTHBEARER
