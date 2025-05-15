@@ -67,9 +67,9 @@ kafka:
     ## @param sasl.enabledMechanisms Comma-separated list of allowed SASL mechanisms when SASL listeners are configured. Allowed types: `PLAIN`, `SCRAM-SHA-256`, `SCRAM-SHA-512`, `OAUTHBEARER`
     ## NOTE: At the moment, Kafka Raft mode does not support SCRAM, that is why only PLAIN is configured.
     ##
-    enabledMechanisms: SCRAM-SHA-256 # PLAIN  #,SCRAM-SHA-256,SCRAM-SHA-512
+    enabledMechanisms: PLAIN,SCRAM-SHA-256 # PLAIN  #,SCRAM-SHA-256,SCRAM-SHA-512
     interBrokerMechanism: SCRAM-SHA-256 # PLAIN
-    controllerMechanism: SCRAM-SHA-256 # PLAIN
+    controllerMechanism: PLAIN  # Controller에 SCRAM 적용불가능한 이슈가 있음
     ## Credentials for inter-broker communications.
     ## @param sasl.interbroker.user Username for inter-broker communications when SASL is enabled
     ## @param sasl.interbroker.password Password for inter-broker communications when SASL is enabled. If not set and SASL is enabled for the controller listener, a random password will be generated.
@@ -132,7 +132,7 @@ kafka:
   
   # controller: KRAFT모드 Broker
   controller:                      
-    replicaCount: 1
+    replicaCount: 3
     controllerOnly: false          # true: broker 기능을 포함하지 않는 controller 실행 
     zookeeperMigrationMode: false  # true: 주키퍼,크래프트 동시실행가능(마이그레이션목적)
     extraEnvVars: []               # Kafka Pod에 환경변수 "추가"
@@ -239,7 +239,7 @@ kafka:
       containerPorts:
         metrics: 9308
     jmx:            
-      enabled: true
+      enabled: false
       kafkaJmxPort: 5555
       image:
         registry: docker.io  # bitnami/jmx-exporter
@@ -288,27 +288,27 @@ kafka:
 
     # 토픽명 지정시 --topic=* 와 같이 표기 필요 (assign(=)기호 없을시, 따옴표와 백슬래시를 어떻게 배치해도 이스케이프 처리가 의도대로 되지 않음)
     # ACL설정 전, extraConfig(server.properties)에서 ACL 활성화 필요
-    extraProvisioningCommands: # []
-      - echo "Basic ACLs for internal communication"
+    extraProvisioningCommands: []
+      # - echo "Basic ACLs for internal communication"
 
-      # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:inter_broker_user --operation Read --operation Write --topic __consumer_offsets
-      # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:inter_broker_user --operation Read --operation Write --topic __transaction_state
-      # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:inter_broker_user --operation ClusterAction --cluster
-      # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:inter_broker_user --operation Create --operation Delete --topic *
-      # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:inter_broker_user --operation Read --operation Write --group *
-      # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:inter_broker_user --operation IdempotentWrite --cluster
+      # # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:inter_broker_user --operation Read --operation Write --topic __consumer_offsets
+      # # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:inter_broker_user --operation Read --operation Write --topic __transaction_state
+      # # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:inter_broker_user --operation ClusterAction --cluster
+      # # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:inter_broker_user --operation Create --operation Delete --topic *
+      # # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:inter_broker_user --operation Read --operation Write --group *
+      # # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:inter_broker_user --operation IdempotentWrite --cluster
 
-      # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:controller_user --operation Describe --cluster
-      # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:controller_user --operation Alter --cluster
-      # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:controller_user --operation Describe --topic *
-      # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:controller_user --operation Alter --topic *
+      # # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:controller_user --operation Describe --cluster
+      # # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:controller_user --operation Alter --cluster
+      # # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:controller_user --operation Describe --topic *
+      # # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:controller_user --operation Alter --topic *
       
-      # user1에게 모든 토픽 읽기 및 쓰기 권한 부여
-      - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:user1 --operation All --topic=*
+      # # user1에게 모든 토픽 읽기 및 쓰기 권한 부여
+      # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --allow-principal User:user1 --operation All --topic=*
 
-      # user1에게 내부 토픽 숨기기 (prefix로 멀티 토픽 지정)
-      - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --deny-principal User:user1 --operation All --topic=kafka-connect- --resource-pattern-type prefixed
-      - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --deny-principal User:user1 --operation All --topic=__ --resource-pattern-type prefixed
+      # # user1에게 내부 토픽 숨기기 (prefix로 멀티 토픽 지정)
+      # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --deny-principal User:user1 --operation All --topic=kafka-connect- --resource-pattern-type prefixed
+      # - /opt/bitnami/kafka/bin/kafka-acls.sh --bootstrap-server $MY_KAFKA_SVC --add --deny-principal User:user1 --operation All --topic=__ --resource-pattern-type prefixed
 
   kraft:
     enabled: true
