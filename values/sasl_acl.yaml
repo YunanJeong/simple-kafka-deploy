@@ -67,9 +67,9 @@ kafka:
     ## @param sasl.enabledMechanisms Comma-separated list of allowed SASL mechanisms when SASL listeners are configured. Allowed types: `PLAIN`, `SCRAM-SHA-256`, `SCRAM-SHA-512`, `OAUTHBEARER`
     ## NOTE: At the moment, Kafka Raft mode does not support SCRAM, that is why only PLAIN is configured.
     ##
-    enabledMechanisms: PLAIN  #,SCRAM-SHA-256,SCRAM-SHA-512
-    interBrokerMechanism: PLAIN
-    controllerMechanism: PLAIN
+    enabledMechanisms: SCRAM-SHA-256 # PLAIN  #,SCRAM-SHA-256,SCRAM-SHA-512
+    interBrokerMechanism: SCRAM-SHA-256 # PLAIN
+    controllerMechanism: SCRAM-SHA-256 # PLAIN
     ## Credentials for inter-broker communications.
     ## @param sasl.interbroker.user Username for inter-broker communications when SASL is enabled
     ## @param sasl.interbroker.password Password for inter-broker communications when SASL is enabled. If not set and SASL is enabled for the controller listener, a random password will be generated.
@@ -99,7 +99,8 @@ kafka:
     # SASL 활성화 여부: listener 별 protocol을 SASL_PLAINTEXT로 지정하면 개별 활성화
     # ACL 비활성화시 모든 유저가 모든 권한을 가짐 # ACL활성화 후 개별규칙 미설정시 기본 권한 없음
     # production ready에선 Secret 또는 환경변수로 처리 필수
-    # 테스트 => kcat -b localhost:9095 -L  -X security.protocol=SASL_PLAINTEXT -X sasl.mechanisms=PLAIN -X sasl.username=user1 -X sasl.password=1234
+    # TEST) kcat -b localhost:9095 -L  -X security.protocol=SASL_PLAINTEXT -X sasl.mechanisms=PLAIN -X sasl.username=user1 -X sasl.password=11111
+    # TEST) kcat -b localhost:9095 -L  -X security.protocol=SASL_PLAINTEXT -X sasl.mechanisms=SCRAM-SHA-256 -X sasl.username=user1 -X sasl.password=11111
     client:
       users:
         - admin
