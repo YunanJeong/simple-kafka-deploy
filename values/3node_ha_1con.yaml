@@ -91,7 +91,7 @@ kafka:
   # controller: KRAFT모드에서 과거 zookeeper를 대체하는 노드를 의미.
   # Broker 기능을 포함할 수도 있고, 포함하지 않을 수도 있다. default는 combined node로 실행됨.
   controller:
-    replicaCount: 1       # production ready에선 호스트 1대에 kafka 1개, pv 1개 씩만 배치할 것
+    replicaCount: 3       # production ready에선 호스트 1대에 kafka 1개, pv 1개 씩만 배치할 것
     controllerOnly: false  # true: broker 기능을 포함하지 않는 controller-only노드로 실행 
                            # false(default): controller와 broker 기능을 모두 포함하는 combined node로 실행
   
