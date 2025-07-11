@@ -11,61 +11,49 @@ Kubernetes용 대시보드, Kafka, Kafka-ui, Kafka-connect를 포함한다.
 - [Install K3s](https://docs.k3s.io/quick-start)
 - [Install Helm](https://helm.sh/docs/intro/install/)
 
-## Quick Start
-
-### local (private ip로 외부노출되는 환경, WSL, local VM)
-
-```sh
-# broker 3, connect 1, private ip, KRAFT
-helm install test https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v2.0.4/skafka-2.0.4.tgz \
--f https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v2.0.4/kraft-multi.yaml
-```
-
-### public (public ip로 외부노출되는 환경, EC2)
-
-```sh
-# broker 3, connect 1, public ip, KRAFT
-helm install test https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v2.0.4/skafka-2.0.4.tgz \
--f https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v2.0.4/kraft-multi.yaml \
---set "kafka.externalAccess.autoDiscovery.enabled=false" \
---set "kafka.externalAccess.controller.service.nodePorts={30003,30004,30005}"
-```
-
-## Start (Archive)
-
-### local
+## Start
 
 ```shell
 # helm install {releaseName} {chart} -f {customValue.yaml}
-# broker 3, connect 1, private ip, KRAFT
-helm install test skafka-2.0.4.tgz -f values/kraft-multi.yaml
+helm install kfk skafka-3.0.0.tgz
 
-# broker 1, connect 1, private ip, KRAFT
-helm install test skafka-2.0.4.tgz -f values/kraft-multi.yaml --set "kafka.controller.replicaCount=1"
-  
+# 주로 private ip로 외부노출되는 환경, WSL, local VM에 사용
+helm install kfk skafka-3.0.0.tgz -f values/1node_AD.yaml
+helm install kfk skafka-3.0.0.tgz -f values/3node_HA_AD.yaml
+
+# 주로 public ip로 외부노출되는 환경, EC2, 클라우드에 사용
+helm install kfk skafka-3.0.0.tgz -f values/1node.yaml
+helm install kfk skafka-3.0.0.tgz -f values/3node_HA.yaml
+
+# Quick Start
+helm install kfk https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.0.0/skafka-3.0.0.tgz \
+-f https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.0.0/1node_AD.yaml
+
+helm install kfk https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.0.0/skafka-3.0.0.tgz \
+-f https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.0.0/3node_HA_AD.yaml
+
+helm install kfk https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.0.0/skafka-3.0.0.tgz \
+-f https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.0.0/1node.yaml
+
+helm install kfk https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.0.0/skafka-3.0.0.tgz \
+-f https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.0.0/3node_HA.yaml
 ```
 
-### public
+### Values 파일설명
 
-```shell
-# broker 3, connect 1, public ip, KRAFT
-helm install test skafka-2.0.4.tgz -f values/kraft-multi.yaml \
---set "kafka.externalAccess.autoDiscovery.enabled=false" \
---set "kafka.externalAccess.controller.service.nodePorts={30003,30004,30005}"
-
-# broker 1, connect 1, public ip, KRAFT
-helm install test skafka-2.0.4.tgz -f values/kraft-multi.yaml \
---set "kafka.externalAccess.autoDiscovery.enabled=false" \
---set "kafka.externalAccess.controller.service.nodePorts={30003}"
---set "kafka.controller.replicaCount=1"
-```
+- 1node: 노드 1개
+- 3node_HA: 노드 3개 HA 구성(pdb 최소 51% 가용유지, replication factor 2, partition 3)
+- AD: auto_discovery
+  - auto discovery 및 관련기능 활성화
+  - 노드의 네트워크 정보를 자동으로 가져와서, advertiesd.listeners 및 쿠버네티스 Service를 구성
+  - `auto discovery가 인식하는 기본IP는 네트워크 환경마다 다를 수 있으므로, 반드시 Kafka 구축 후에 연결 테스트를 해야 함`
 
 ## Access Kafka
 
 ### Broker 외부노출 포트
 
 - LB Port: 9095
-- NP Port: 30003,30004,30005
+- NP Port: 30003,30004,30005 (3노드 기준)
 - `외부에서 접근시 LB Port를 이용하되, 모든 NP Port에 대한 네트워크 인가 필요`
 - NP Port로 개별 broker에 직접접근해도 되지만, 부하분산 효과가 없고, 포트가 직접 노출되어 보안상 좋지 않음
 
@@ -79,18 +67,20 @@ helm install test skafka-2.0.4.tgz -f values/kraft-multi.yaml \
 ##################################################################################################
 ```
 
-### 웹 기반 모니터링 (릴리즈명: `test` 기준)
+### 웹 기반 모니터링 (릴리즈명: `kfk` 기준)
 
-- Kafka-UI: <http://ui4kafka.test.wai>
-- K8s-Dashboard: <http://k8dashboard.test.wai>
+- Kafka-UI
+  - <http://ui4kafka.kfk.wai>
+  - kafka-IP:30080
+- K8s-Dashboard: <http://k8dashboard.kfk.wai>
 - 접속할 클라이언트 PC의 hosts 파일에 다음과 같이 내용 추가 필요
 
 ```sh
 # 리눅스 /etc/hosts
 # 윈도우 C:\Windows\System32\drivers\etc\hosts
 # {serverIP} {appName}.{releaseName}.wai
-X.X.X.X ui4kafka.test.wai
-X.X.X.X k8dashboard.test.wai
+X.X.X.X ui4kafka.kfk.wai
+X.X.X.X k8dashboard.kfk.wai
 ```
 
 ## Delete
@@ -98,7 +88,7 @@ X.X.X.X k8dashboard.test.wai
 ```sh
 # 실행중인 릴리즈 조회 및 삭제
 helm list
-helm uninstall test
+helm uninstall kfk
 
 # 과거 내역이 있는 경우(persistence) 삭제
 kubectl get pvc
@@ -126,10 +116,10 @@ kubectl delete pvc {pvcName}
 
 ```sh
 # 차트의 default value 참고하여 custom value 파일 작성
-helm show values skafka-2.0.4.tgz
+helm show values skafka-3.0.0.tgz
 
 # 업데이트
-helm upgrade test skafka-2.0.4.tgz -f values/my-kraft-multi.yaml
+helm upgrade kfk skafka-3.0.0.tgz -f values/my-kraft-multi.yaml
 ```
 
 ## skafka 차트 수정 시 참고
@@ -159,7 +149,7 @@ helm package skafka/
 
 - [bitnami/kafka](https://artifacthub.io/packages/helm/bitnami/kafka)
 - [licenseware/kafka-connect](https://artifacthub.io/packages/helm/licenseware/kafka-connect)
-- [provectus/kafka-ui](https://artifacthub.io/packages/helm/kafka-ui/kafka-ui)
+- [kafka-ui/kafka-ui(kafbat,provectus)](https://artifacthub.io/packages/helm/kafka-ui/kafka-ui)
 
 ### Kafka 이슈 (커스터마이징, 트러블 슈팅)
 
