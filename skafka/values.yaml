@@ -4,7 +4,7 @@
 
 
 global:
-  monitorDomain: test.wai
+  monitorDomain: "{{ .Release.Name }}.wai"
   imageRegistry: docker.io              # bitnami 계열 글로벌
 
 kafka:
@@ -95,7 +95,7 @@ kafka:
   # controller: KRAFT모드에서 과거 zookeeper를 대체하는 노드를 의미.
   # Broker 기능을 포함할 수도 있고, 포함하지 않을 수도 있다. default는 combined node로 실행됨.
   controller:
-    replicaCount: 3        # production ready에선 호스트 1대에 kafka 1개, pv 1개 씩만 배치할 것
+    replicaCount: 3       # production ready에선 호스트 1대에 kafka 1개, pv 1개 씩만 배치할 것
     controllerOnly: false  # true: broker 기능을 포함하지 않는 controller-only노드로 실행 
                            # false(default): controller와 broker 기능을 모두 포함하는 combined node로 실행
     
@@ -188,7 +188,7 @@ kafka:
     ##
     pdb:
       create: true
-      minAvailable: ""
+      minAvailable: ""  # 고가용성 보장시 replication factor 최소 2 설정 후, "50%"이상 pod가 켜져있도록 설정
       maxUnavailable: ""
 
     persistentVolumeClaimRetentionPolicy:
@@ -197,7 +197,7 @@ kafka:
       whenDeleted: Retain
 
     persistence:
-      enabled: true               # production 배포시, true 필수
+      enabled: false               # production 배포시, true 필수
       size: 8Gi                    # 디스크 가용량의 70~80% 권장
       mountPath: /bitnami/kafka
     logPersistence:
@@ -208,7 +208,8 @@ kafka:
   # controller 기능이 없는 순수 broker
   broker:
     replicaCount: 0
-
+  
+  # 공통 Service
   service:
     type: LoadBalancer
     ports:
@@ -310,7 +311,6 @@ kafka:
     ingressNSMatchLabels: {}
     ingressNSPodMatchLabels: {}
 
-
   serviceAccount:
     create: true
     name: ""
@@ -319,159 +319,19 @@ kafka:
   rbac:
     create: true  # autoDiscovery 사용시 true 필요
 
-
   metrics:
     jmx:
       enabled: false
-      kafkaJmxPort: 5555
-      image:
-        registry: docker.io
-        repository: bitnami/jmx-exporter
-        tag: 1.3.0-debian-12-r3
-        digest: ""
-        pullPolicy: IfNotPresent
-        pullSecrets: []
-      containerSecurityContext:
-        enabled: true
-        seLinuxOptions: {}
-        runAsUser: 1001
-        runAsGroup: 1001
-        runAsNonRoot: true
-        allowPrivilegeEscalation: false
-        readOnlyRootFilesystem: true
-        capabilities:
-          drop: ["ALL"]
-      containerPorts:
-        metrics: 5556
-      resourcesPreset: "micro"
-      resources: {}
-      livenessProbe:
-        enabled: true
-        initialDelaySeconds: 60
-        periodSeconds: 10
-        timeoutSeconds: 10
-        successThreshold: 1
-        failureThreshold: 3
-      readinessProbe:
-        enabled: true
-        initialDelaySeconds: 30
-        periodSeconds: 10
-        timeoutSeconds: 10
-        successThreshold: 1
-        failureThreshold: 3
-      service:
-        ports:
-          metrics: 5556
-        clusterIP: ""
-        sessionAffinity: None
-        annotations:
-          prometheus.io/scrape: "true"
-          prometheus.io/port: "{{ .Values.metrics.jmx.service.ports.metrics }}"
-          prometheus.io/path: "/metrics"
-        ipFamilies: []
-        ipFamilyPolicy: ""
-      whitelistObjectNames:
-        - kafka.controller:*
-        - kafka.server:*
-        - java.lang:*
-        - kafka.network:*
-        - kafka.log:*
-      config: |-
-        jmxUrl: service:jmx:rmi:///jndi/rmi://127.0.0.1:{{ .Values.metrics.jmx.kafkaJmxPort }}/jmxrmi
-        lowercaseOutputName: true
-        lowercaseOutputLabelNames: true
-        ssl: false
-        {{- if .Values.metrics.jmx.whitelistObjectNames }}
-        whitelistObjectNames: ["{{ join "\",\"" .Values.metrics.jmx.whitelistObjectNames }}"]
-        {{- end }}
-      existingConfigmap: ""
-      extraRules: ""
     serviceMonitor:
       enabled: false
-      namespace: ""
-      path: /metrics
-      interval: ""
-      scrapeTimeout: ""
-      labels: {}
-      selector: {}
-      relabelings: []
-      metricRelabelings: []
-      honorLabels: false
-      jobLabel: ""
     prometheusRule:
       enabled: false
-      namespace: ""
-      labels: {}
-      groups: []
-
 
   provisioning:
     enabled: false
-    waitForKafka: true
-    useHelmHooks: true
-    automountServiceAccountToken: false
-    numPartitions: 1
-    replicationFactor: 1
+    numPartitions: 1         # 초기 생성할 topic들의 partition 수 (broker의 default 설정 아님)
+    replicationFactor: 1     # 초기 생성할 topic들의 replicationFactors (broker의 default 설정 아님)
     topics: []
-    nodeSelector: {}
-    tolerations: []
-    extraProvisioningCommands: []
-    parallel: 1
-    preScript: ""
-    postScript: ""
-    auth:
-      tls:
-        type: jks
-        certificatesSecret: ""
-        cert: tls.crt
-        key: tls.key
-        caCert: ca.crt
-        keystore: keystore.jks
-        truststore: truststore.jks
-        passwordsSecret: ""
-        keyPasswordSecretKey: key-password
-        keystorePasswordSecretKey: keystore-password
-        truststorePasswordSecretKey: truststore-password
-        keyPassword: ""
-        keystorePassword: ""
-        truststorePassword: ""
-    command: []
-    args: []
-    extraEnvVars: []
-    extraEnvVarsCM: ""
-    extraEnvVarsSecret: ""
-    podAnnotations: {}
-    podLabels: {}
-    serviceAccount:
-      create: true
-      name: ""
-      automountServiceAccountToken: false
-    resourcesPreset: "micro"
-    resources: {}
-    podSecurityContext:
-      enabled: true
-      fsGroupChangePolicy: Always
-      sysctls: []
-      supplementalGroups: []
-      fsGroup: 1001
-      seccompProfile:
-        type: "RuntimeDefault"
-    containerSecurityContext:
-      enabled: true
-      seLinuxOptions: {}
-      runAsUser: 1001
-      runAsGroup: 1001
-      runAsNonRoot: true
-      allowPrivilegeEscalation: false
-      readOnlyRootFilesystem: true
-      capabilities:
-        drop: ["ALL"]
-    schedulerName: ""
-    enableServiceLinks: true
-    extraVolumes: []
-    extraVolumeMounts: []
-    sidecars: []
-    initContainers: []
 
 connect:
   enabled: true
@@ -531,6 +391,9 @@ ui4kafka:
   enabled: true
   image:  # 글로벌 적용 불가
     registry: docker.io
+  service:
+    type: NodePort
+    nodePort: 30080
   yamlApplicationConfig: false  # warning 메시지 발생하지만 괜찮음. # 아래서 Helm 내장객체인 {{ .Release.Name }} 사용하려면 false 설정필요
   myYamlApplicationConfig:
     kafka:
