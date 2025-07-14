@@ -1,4 +1,4 @@
-FROM bitnami/kafka:3.5.1
+FROM bitnami/kafka:4.0.0-debian-12-r8
 
 USER root
 RUN apt-get update
