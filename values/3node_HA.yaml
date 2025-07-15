@@ -108,7 +108,7 @@ kafka:
 
     lifecycleHooks: {}
 
-    # resources 지정시, resourcePreset 무시됨. Production 배포시 반드시 resources 지정
+    # resources 지정시, resourcePreset 무시됨. Production 배포시 반드시 resources(requests) 지정
     ## ref: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/
     ## More information: https://github.com/bitnami/charts/blob/main/bitnami/common/templates/_resources.tpl#L15
     ##
