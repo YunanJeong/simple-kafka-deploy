@@ -15,7 +15,7 @@ type: application
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
-version: 3.0.0
+version: 3.0.1
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application. Versions are not expected to
@@ -27,7 +27,7 @@ appVersion: "4.0.0"  # kafka version 기준
 
 dependencies:
   - name: kafka
-    version: 32.3.3
+    version: 32.3.7
     repository: https://charts.bitnami.com/bitnami
     condition: kafka.enabled
   # 서브차트 kafka의 서브차트 common을 직접 사용시 각 서브차트간 커플링이 심해진다.

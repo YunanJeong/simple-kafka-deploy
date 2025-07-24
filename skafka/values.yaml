@@ -16,6 +16,11 @@ kafka:
   existingKraftSecret: ""
   kraftVersion: 1
 
+  ##############################################################################################################
+  # 상위설정과 하단의 controller, broker 개별 섹션에 동일한 옵션이 있을 때는, 하위설정이 우선적용됨 
+  # 하위설정이 빈 값일 때만 상위설정 적용
+  ##############################################################################################################
+
   # server.properties 전체 덮어쓰기. 빈 값{}은 default.
   config: {}
   
@@ -48,8 +53,10 @@ kafka:
   existingSecretConfig: ""
   log4j2: ""
   existingLog4j2ConfigMap: ""
-  # Percentage 옵션은 전체 메모리 기준(resources.limit)이며, 후속설정에서 -Xms, -Xmx가 함께 지정되면 무시됨
-  heapOpts: -XX:InitialRAMPercentage=75 -XX:MaxRAMPercentage=75
+  
+  # 빈값으로 두고 후속설정(controller.heapOpts)을 우선 사용한다.
+  heapOpts: ""
+
   brokerRackAwareness:
     enabled: false
     cloudProvider: ""
@@ -112,8 +119,12 @@ kafka:
     # secretConfig: ""
     # existingSecretConfig: ""
 
-    # kafka 힙설정 체크
-    heapOpts: -Xmx1024m -Xms1024m
+  
+    # Production 권장값: 가용량의 20~40% 수준이면서, 1~6GB 범위를 넘지 않도록 한다. # 고사양 노드에서, percentage보다는 6GB 넘지 않는 것이 최우선사항.
+    # Test실행최소사양: -Xmx512m -Xms512m
+    # 가용량의 33% 지정 예시: -XX:InitialRAMPercentage=33 -XX:MaxRAMPercentage=33 
+    # Percentage 옵션의 기준은 컨테이너 최대 가용량(requests.limits.memory, 없으면 노드 사양)이고, -Xms, -Xmx가 함께 지정되면 무시됨
+    heapOpts: -Xmx512m -Xms512m
 
     # controller(combined) 노드에서 단독설정 필요시 사용.
     # 여기말고 상위 공통 설정을 주로 사용할 것이므로 필요없음
@@ -123,29 +134,38 @@ kafka:
     # extraEnvVarsCM: ""
     # extraEnvVarsSecret: ""
     extraContainerPorts: []
+
+    # livenessProbe: Production 배포시 일반적으로 꼭 필요한 편이나, 주의사항이 있음
+    # - Container내부 앱이 무한루프, 데드락 등 "비정상상태이면서도 계속 실행중인 경우" Container를 종료&재실행하기 위함
+    # - OOM kill처럼 "종료 signal이 있는 경우" 컨테이너가 알아서 종료&재실행되므로 livenessProbe가 필요한 경우는 아님
+    # - (주의사항)대용량 트래픽 처리 시 처리지연으로 livenessProbe가 실패하여 불필요한 재시작이 반복될 수 있으니, 실패조건을 널널하게 주는 것이 좋음
     livenessProbe:
       enabled: true
+    
+    # readinessProbe: 필수는 아님
+    # - Fail 지속시 해당 Container가 Service 엔드포인트에서 제외되어 외부 트래픽 유입이 차단됨 (Container는 종료되지 않음)
+    # - 비정상 상태 앱의 통신을 사전차단하는 옵션
+    # - 대부분의 상용앱에 retry 로직이 이미 있으므로 필수는 아님
     readinessProbe:
       enabled: true
+    
+    # 솔직히 필요없음. 꺼두는게 낫다.
     startupProbe:
       enabled: false
 
     lifecycleHooks: {}
-
-    # resources 지정시, resourcePreset 무시됨. Production 배포시 반드시 resources 지정
-    ## Kafka resource requests and limits
-    ## ref: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/
-    ## @param controller.resourcesPreset Set container resources according to one common preset (allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge). This is ignored if controller.resources is set (controller.resources is recommended for production).
+   
     ## More information: https://github.com/bitnami/charts/blob/main/bitnami/common/templates/_resources.tpl#L15
-    ##
-    resourcesPreset: "small"
-    resources: {}
-    ##   requests:
-    ##     cpu: 2
-    ##     memory: 512Mi
-    ##   limits:
-    ##     cpu: 3
-    ##     memory: 1024Mi
+    resourcesPreset: "medium" # medium memory: 1024~1536Mi
+    
+    # Production시 최소 resources.requests 지정 필수!!
+    # resources 미할당시, 테스트용 resourcePreset이 기본 적용됨. resources.requests만 설정해도 resourcePreset 무시됨.
+    # resources.limits 할당시 힙메모리 고려할 것
+    resources: # {}
+      requests:
+        cpu: 2
+        memory: 512Mi
+    ##   limits: {}
 
     # podSecurityContext:
     # containerSecurityContext:
@@ -348,6 +368,8 @@ connect:
     CONNECT_BOOTSTRAP_SERVERS: "{{ .Release.Name }}-kafka:9092"
     CONNECT_REST_PORT: "8083"
     # KAFKA_HEAP_OPTS: "-Xms4G -Xmx4G"
+    # 컨테이너 최대 가용량 대비 힙 비율 설정(requests.limits.memory, 없으면 노드 사양 기준)이고, -Xms, -Xmx가 함께 지정되면 무시됨
+    # KAFKA_HEAP_OPTS: "-XX:InitialRAMPercentage=33 -XX:MaxRAMPercentage=33" 
   extraVolumeMounts: []
     # - name: plugin
     #   mountPath: /usr/share/confluent-hub-components
