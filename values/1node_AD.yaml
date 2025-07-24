@@ -92,31 +92,34 @@ kafka:
     controllerOnly: false  # true: broker 기능을 포함하지 않는 controller-only노드로 실행 
                            # false(default): controller와 broker 기능을 모두 포함하는 combined node로 실행
   
-    # kafka 힙설정 체크
-    heapOpts: -Xmx1024m -Xms1024m
+    # Production 권장값: 가용량의 20~40% 수준이면서, 1~6GB 범위를 넘지 않도록 한다. # 고사양 노드에서, percentage보다는 6GB 넘지 않는 것이 최우선사항.
+    heapOpts: -Xmx512m -Xms512m
 
     extraContainerPorts: []
+
+    # livenessProbe: Production 배포시 일반적으로 꼭 필요한 편이나, 주의사항이 있음
     livenessProbe:
       enabled: true
+    
+    # readinessProbe: 필수는 아님. 켜두면 좋음.
     readinessProbe:
       enabled: true
+    
+    # 솔직히 필요없음. 꺼두는게 낫다.
     startupProbe:
       enabled: false
 
     lifecycleHooks: {}
 
-    # resources 지정시, resourcePreset 무시됨. Production 배포시 반드시 resources(requests) 지정
-    ## ref: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/
-    ## More information: https://github.com/bitnami/charts/blob/main/bitnami/common/templates/_resources.tpl#L15
-    ##
-    resourcesPreset: "small"
-    resources: {}
-    ##   requests:
-    ##     cpu: 2
-    ##     memory: 512Mi
-    ##   limits:
-    ##     cpu: 3
-    ##     memory: 1024Mi
+    # Production시 최소 resources.requests 지정 필수!!
+    # resources 미할당시, 테스트용 resourcePreset이 기본 적용됨. resources.requests만 설정해도 resourcePreset 무시됨.
+    # resources.limits 할당시 힙메모리 고려할 것
+    resources: # {}
+      requests:
+        cpu: 2
+        memory: 512Mi
+    ##   limits: {}
+
 
     automountServiceAccountToken: true # autoDiscovery 사용시 true 필요
     affinity: {}
@@ -245,6 +248,8 @@ connect:
     CONNECT_BOOTSTRAP_SERVERS: "{{ .Release.Name }}-kafka:9092"
     CONNECT_REST_PORT: "8083"
     # KAFKA_HEAP_OPTS: "-Xms4G -Xmx4G"
+    # 컨테이너 최대 가용량 대비 힙 비율 설정(requests.limits.memory, 없으면 노드 사양 기준)이고, -Xms, -Xmx가 함께 지정되면 무시됨
+    # KAFKA_HEAP_OPTS: "-XX:InitialRAMPercentage=33 -XX:MaxRAMPercentage=33" 
   extraVolumeMounts: # []
     - name: plugin
       mountPath: /usr/share/confluent-hub-components
