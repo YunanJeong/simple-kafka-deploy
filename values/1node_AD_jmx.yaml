@@ -264,7 +264,7 @@ kafka:
         {{- if .Values.metrics.jmx.whitelistObjectNames }}
         whitelistObjectNames: ["{{ join "\",\"" .Values.metrics.jmx.whitelistObjectNames }}"]
         {{- end }}
-      existingConfigmap: configmap-jmx-custom  # ""
+      existingConfigmap: configmap-jmx-custom  # ""  # 설정시 기본 configmap을 구성하는 다른 values섹션 모두 무시
       extraRules: ""  # |-
         # - pattern: 'java.lang<type=(.+),name=(.+)><>([a-zA-Z0-9_]+)'
         #   name: jvm_$1_$2_$3
