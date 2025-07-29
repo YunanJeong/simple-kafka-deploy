@@ -28,6 +28,7 @@
 
 ### JMX Exporter (Kafka Connect)
 
+- jmx config sample: https://github.com/prometheus/jmx_exporter/tree/main/examples
 - `jvm_gc_collection_seconds_sum`  
   (Kafka Connect GC 장애, 성능 저하 선제 감지)
 
