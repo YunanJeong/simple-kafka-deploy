@@ -1,13 +1,13 @@
 # 운영자동화를 위한 카프카 메트릭
 
-실제 운영환경에서 모니터링할만한 것들, 알람 또는 단일 대시보드에 포함할만한 것들
+실제 운영환경에서 모니터링할만한 것들
 
 ## Kafka Exporter
 
+- Kafka-UI에서 대부분 조회가능하긴 한데, 알람을 걸어서 운영자동화하려면 Exporter 배포해야 함
 - 배포방법
-  - kafka 클러스터 당 1개만 필요 => deployment로 배포
-  - kafka 배포차트에 포함시키거나 개별 헬름차트 사용
-  - kafka exporter가 kafka와 직접 통신
+  - exporter가 kafka와 직접 통신하므로 클러스터 당 1개만 필요
+  - deployment로 배포
 - `kafka_consumergroup_lag`  
   (컨슈머 그룹 지연 감지. Kafka Exporter 없이 이 값 자체가 불가능하며, 클러스터 전체 소비 지연 감지의 핵심)
 - `kafka_brokers`  
@@ -16,9 +16,9 @@
 ## JMX Exporter (Kafka Broker)
 
 - 배포방법
-  - 자바 앱 마다 1개씩 필요
-  - sidecar(standalone 모드) 또는 이미지 내장(agent모드)으로 배포
-  - serviceMonitor 필요
+  - 앱 마다 1개씩 필요
+  - sidecar(standalone 모드) 또는 본 앱 이미지에 내장(agent모드)하여 배포
+  - 자바 앱과 커플링되어있으므로 개별 헬름차트가 아닌, kafka 배포차트와 결합되어 있어야 함. serviceMonitor도 필수.  
 - `kafka_server_under_replicated_partitions`  
   (데이터 무결성 위협 즉시 감지)
 - `kafka_controller_active_controller_count`  
@@ -35,7 +35,7 @@
 
 - 배포방법
   - 노드 당 1개 씩 필요
-  - 개별 헬름차트(daemonset, serviceMonitor)으로 배포
+  - daemonset, serviceMonitor로 배포
 - `node_cpu_seconds_total`  
   (CPU 사용률)
 - `node_memory_MemAvailable_bytes`  
