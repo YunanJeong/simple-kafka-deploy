@@ -24,6 +24,6 @@ docker build -t my-connect:0.0.1  ./
 
 ## 구버전 JDK,JRE가 필요한 경우
 
-- `일부 플러그인 때문에 구버전 jdk`가 필요할 수 있음
+- `일부 플러그인을 위해 구버전 jdk`가 필요할 수 있음
 - bitnami/kafka 3버전대부터 jdk17로 배포되지만 jdk 11로도 무난히 돌아감
 - stage 나눠서 적용한 예시
