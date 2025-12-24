@@ -15,28 +15,28 @@ Kubernetes용 대시보드, Kafka, Kafka-ui, Kafka-connect를 포함한다.
 
 ```shell
 # helm install {releaseName} {chart} -f {customValue.yaml}
-helm install kfk skafka-3.0.1.tgz
+helm install kfk skafka-3.0.2.tgz
 
 # 주로 private ip로 외부노출되는 환경, WSL, local VM에 사용
-helm install kfk skafka-3.0.1.tgz -f values/1node_AD.yaml
-helm install kfk skafka-3.0.1.tgz -f values/3node_HA_AD.yaml
+helm install kfk skafka-3.0.2.tgz -f values/1node_AD.yaml
+helm install kfk skafka-3.0.2.tgz -f values/3node_HA_AD.yaml
 
 # 주로 public ip로 외부노출되는 환경, EC2, 클라우드에 사용
-helm install kfk skafka-3.0.1.tgz -f values/1node.yaml
-helm install kfk skafka-3.0.1.tgz -f values/3node_HA.yaml
+helm install kfk skafka-3.0.2.tgz -f values/1node.yaml
+helm install kfk skafka-3.0.2.tgz -f values/3node_HA.yaml
 
 # Quick Start
-helm install kfk https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.0.1/skafka-3.0.1.tgz \
--f https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.0.1/1node_AD.yaml
+helm install kfk https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.0.2/skafka-3.0.2.tgz \
+-f https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.0.2/1node_AD.yaml
 
-helm install kfk https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.0.1/skafka-3.0.1.tgz \
--f https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.0.1/3node_HA_AD.yaml
+helm install kfk https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.0.2/skafka-3.0.2.tgz \
+-f https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.0.2/3node_HA_AD.yaml
 
-helm install kfk https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.0.1/skafka-3.0.1.tgz \
--f https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.0.1/1node.yaml
+helm install kfk https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.0.2/skafka-3.0.2.tgz \
+-f https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.0.2/1node.yaml
 
-helm install kfk https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.0.1/skafka-3.0.1.tgz \
--f https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.0.1/3node_HA.yaml
+helm install kfk https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.0.2/skafka-3.0.2.tgz \
+-f https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.0.2/3node_HA.yaml
 ```
 
 ### Values 파일설명
@@ -116,10 +116,10 @@ kubectl delete pvc {pvcName}
 
 ```sh
 # 차트의 default value 참고하여 custom value 파일 작성
-helm show values skafka-3.0.1.tgz
+helm show values skafka-3.0.2.tgz
 
 # 업데이트
-helm upgrade kfk skafka-3.0.1.tgz -f values/my-kraft-multi.yaml
+helm upgrade kfk skafka-3.0.2.tgz -f values/my-kraft-multi.yaml
 ```
 
 ## skafka 차트 수정 시 참고
