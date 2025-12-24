@@ -11,7 +11,7 @@ kafka:
   enabled: true
   image:
     registry: docker.io
-
+    repository: bitnamilegacy/kafka
   clusterId: ""
   existingKraftSecret: ""
   kraftVersion: 1
@@ -93,12 +93,17 @@ kafka:
   defaultInitContainers:
     volumePermissions:
       enabled: false
+      image:
+        registry: docker.io
+        repository: bitnamilegacy/os-shell
     prepareConfig:
       containerSecurityContext:
         enabled: true
     autoDiscovery:
       enabled: true  # false시, 아래 네트워크 섹션 직접 설정 필요(nodeports, loadBalancerIps, externalIps 등)
-
+      image:
+        registry: docker.io
+        repository: bitnamilegacy/kubectl
   # controller: KRAFT모드에서 과거 zookeeper를 대체하는 노드를 의미.
   # Broker 기능을 포함할 수도 있고, 포함하지 않을 수도 있다. default는 combined node로 실행됨.
   controller:
@@ -342,6 +347,9 @@ kafka:
   metrics:
     jmx:
       enabled: false
+      image:
+        registry: docker.io
+        repository: bitnamilegacy/jmx-exporter
     serviceMonitor:
       enabled: false
     prometheusRule:
