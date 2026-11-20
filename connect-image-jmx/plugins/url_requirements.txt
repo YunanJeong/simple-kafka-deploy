@@ -1,2 +1,4 @@
 https://d2p6pa21dvn84.cloudfront.net/api/plugins/debezium/debezium-connector-postgresql/versions/2.5.4/debezium-debezium-connector-postgresql-2.5.4.zip
 https://github.com/prometheus/jmx_exporter/releases/download/1.7.0/jmx_prometheus_javaagent-1.7.0.jar
+https://d2p6pa21dvn84.cloudfront.net/api/plugins/confluentinc/kafka-connect-jdbc/versions/10.7.4/confluentinc-kafka-connect-jdbc-10.7.4.zip
+https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.19/mysql-connector-java-8.0.19.jar

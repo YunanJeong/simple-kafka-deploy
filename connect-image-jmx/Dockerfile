@@ -2,7 +2,7 @@ FROM bitnamilegacy/kafka:4.0.0-debian-12-r10
 
 USER root
 RUN apt-get update
-RUN apt-get install -y curl dnsutils netcat unzip vim iputils-ping jq gettext wget
+RUN apt-get install -y curl dnsutils netcat-openbsd unzip vim iputils-ping jq gettext wget
 
 RUN echo 'alias ll="ls -alh"' >> ~/.bashrc
 
