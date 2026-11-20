@@ -39,6 +39,10 @@ RUN cd /opt/bitnami/kafka/plugins \
 RUN cd /opt/bitnami/kafka/plugins \
     && mv mysql-connector-java-8.0.19.jar confluentinc-kafka-connect-jdbc-10.7.4/
 
+# 메트릭 수집용 JMX exporter javaagent
+RUN mkdir -p /opt/bitnami/kafka/jmx \
+    && mv /opt/bitnami/kafka/plugins/jmx_prometheus_javaagent-1.7.0.jar /opt/bitnami/kafka/jmx/jmx_prometheus_javaagent.jar
+
 ######################################
 # 커넥트 설정반영 및 실행
 ######################################

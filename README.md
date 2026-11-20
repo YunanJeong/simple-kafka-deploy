@@ -15,38 +15,43 @@ Kubernetes용 대시보드, Kafka, Kafka-ui, Kafka-connect를 포함한다.
 
 ```shell
 # helm install {releaseName} {chart} -f {customValue.yaml}
-helm install kfk skafka-3.0.2.tgz
+helm install kfk skafka-3.1.0.tgz
 
 # 주로 private ip로 외부노출되는 환경, WSL, local VM에 사용
-helm install kfk skafka-3.0.2.tgz -f values/1node_AD.yaml
-helm install kfk skafka-3.0.2.tgz -f values/3node_HA_AD.yaml
+helm install kfk skafka-3.1.0.tgz -f values/1node_AD.yaml
+helm install kfk skafka-3.1.0.tgz -f values/3node_HA_AD.yaml
 
 # 주로 public ip로 외부노출되는 환경, EC2, 클라우드에 사용
-helm install kfk skafka-3.0.2.tgz -f values/1node.yaml
-helm install kfk skafka-3.0.2.tgz -f values/3node_HA.yaml
+helm install kfk skafka-3.1.0.tgz -f values/1node.yaml
+helm install kfk skafka-3.1.0.tgz -f values/3node_HA.yaml
+
+# 브로커 JMX 메트릭 포함 (ServiceMonitor CRD 필요. 없으면 --set kafka.metrics.serviceMonitor.enabled=false)
+# (커넥트 메트릭은 javaagent jar 포함 이미지가 필요해 제외)
+helm install kfk skafka-3.1.0.tgz -f values/1node_AD_jmx.yaml
 
 # Quick Start
-helm install kfk https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.0.2/skafka-3.0.2.tgz \
--f https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.0.2/1node_AD.yaml
+helm install kfk https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.1.0/skafka-3.1.0.tgz \
+-f https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.1.0/1node_AD.yaml
 
-helm install kfk https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.0.2/skafka-3.0.2.tgz \
--f https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.0.2/3node_HA_AD.yaml
+helm install kfk https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.1.0/skafka-3.1.0.tgz \
+-f https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.1.0/3node_HA_AD.yaml
 
-helm install kfk https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.0.2/skafka-3.0.2.tgz \
--f https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.0.2/1node.yaml
+helm install kfk https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.1.0/skafka-3.1.0.tgz \
+-f https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.1.0/1node.yaml
 
-helm install kfk https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.0.2/skafka-3.0.2.tgz \
--f https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.0.2/3node_HA.yaml
+helm install kfk https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.1.0/skafka-3.1.0.tgz \
+-f https://github.com/YunanJeong/simple-kafka-deploy/releases/download/v3.1.0/3node_HA.yaml
 ```
 
 ### Values 파일설명
 
 - 1node: 노드 1개
-- 3node_HA: 노드 3개 HA 구성(pdb 최소 51% 가용유지, replication factor 2, partition 3)
+- 3node_HA: 노드 3개 HA 구성(pdb 최소 51% 가용유지, replication factor 3, min.insync.replicas 2, partition 3)
 - AD: auto_discovery
   - auto discovery 및 관련기능 활성화
   - 노드의 네트워크 정보를 자동으로 가져와서, advertiesd.listeners 및 쿠버네티스 Service를 구성
   - `auto discovery가 인식하는 기본IP는 네트워크 환경마다 다를 수 있으므로, 반드시 Kafka 구축 후에 연결 테스트를 해야 함`
+- jmx: 브로커 JMX 메트릭 수집(Strimzi 예제 규칙, ServiceMonitor 사용)
 
 ## Access Kafka
 
@@ -99,11 +104,14 @@ kubectl delete pvc {pvcName}
 
 ```sh
 .
-├── reference/              # (단순 참고용) 하위 차트의 default value
+├── connect-image-jmx/      # 커넥트 이미지 샘플 (플러그인 + JMX exporter javaagent)
+├── connect-image-jdk11-kfk3/ # 커넥트 이미지 샘플 (구버전 JDK, Kafka)
+├── reference/              # (단순 참고용) 하위 차트의 default value, 메트릭 메모, Strimzi 대시보드 백업
 ├── skafka/                 # 헬름차트 디렉토리
 │   ├── Chart.lock            # 하위차트 버전 확정
 │   ├── charts/               # 하위차트 생성 경로
 │   ├── Chart.yaml            # 버전관리 (차트, 앱, 하위차트)
+│   ├── files/jmx/            # JMX exporter 수집 규칙 (Strimzi 예제 규칙)
 │   ├── templates/            # Helm template
 │   └── values.yaml           # default value
 ├── values/                 # 배포시 오버라이딩할 custom value 모음
@@ -116,10 +124,10 @@ kubectl delete pvc {pvcName}
 
 ```sh
 # 차트의 default value 참고하여 custom value 파일 작성
-helm show values skafka-3.0.2.tgz
+helm show values skafka-3.1.0.tgz
 
 # 업데이트
-helm upgrade kfk skafka-3.0.2.tgz -f values/my-kraft-multi.yaml
+helm upgrade kfk skafka-3.1.0.tgz -f values/my-kraft-multi.yaml
 ```
 
 ## skafka 차트 수정 시 참고

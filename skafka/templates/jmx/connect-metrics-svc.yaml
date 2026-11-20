@@ -1,0 +1,22 @@
+{{- if and .Values.connect.enabled .Values.connect.metrics.enabled }}
+# 커넥트 메트릭 포트용 Service
+# 커넥트 서브차트(licenseware/kafka-connect)는 8083 외의 포트를 열 수 없어서 별도로 만든다.
+# selector는 서브차트가 커넥트 파드에 붙이는 라벨을 따른다. (name은 서브차트 alias)
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-connect-metrics
+  labels:
+    {{- include "skafka.labels" . | nindent 4 }}
+    app.kubernetes.io/component: connect-metrics
+spec:
+  type: ClusterIP
+  ports:
+    - name: http-metrics
+      protocol: TCP
+      port: {{ .Values.connect.metrics.port }}
+      targetPort: {{ .Values.connect.metrics.port }}
+  selector:
+    app.kubernetes.io/name: {{ .Values.connect.nameOverride | default "connect" }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}

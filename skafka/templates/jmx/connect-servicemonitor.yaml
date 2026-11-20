@@ -1,0 +1,31 @@
+{{- if and .Values.connect.enabled .Values.connect.metrics.enabled .Values.connect.metrics.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Release.Name }}-connect
+  labels:
+    {{- include "skafka.labels" . | nindent 4 }}
+    app.kubernetes.io/component: connect-metrics
+    {{- with .Values.connect.metrics.serviceMonitor.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: connect-metrics
+  endpoints:
+    - port: http-metrics
+      path: /metrics
+      {{- with .Values.connect.metrics.serviceMonitor.interval }}
+      interval: {{ . }}
+      {{- end }}
+      # Strimzi 커넥트 대시보드가 찾는 라벨
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_pod_name]
+          targetLabel: kubernetes_pod_name
+        - targetLabel: strimzi_io_cluster
+          replacement: {{ .Release.Name }}-connect
+        - targetLabel: strimzi_io_kind
+          replacement: KafkaConnect
+{{- end }}

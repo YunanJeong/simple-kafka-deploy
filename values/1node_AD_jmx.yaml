@@ -1,7 +1,11 @@
-# Default values for skafka.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
+#######################################################################
+# 1node_AD_jmx
+# - Kafka: 1node (controller+broker combined), Connect: 1node
+# - 토픽 기본값: partitions 1, RF 1, minISR 1
+# - pdb: 미설정
+# - 외부노출: NodePort 30003, auto discovery 사용
+# - JMX: 브로커 메트릭 수집 (ServiceMonitor 사용)
+#######################################################################
 
 global:
   monitorDomain: "{{ .Release.Name }}.wai"
@@ -18,7 +22,7 @@ kafka:
 
   # server.properties 전체 덮어쓰기. 빈 값{}은 default.
   config: {}
-  
+
   # server.properties의 특정 키만 덮어쓰기. 사실상 extraConfig
   overrideConfiguration: # {}
     # https://kafka.apache.org/42/configuration/broker-configs/
@@ -42,7 +46,7 @@ kafka:
 
     # __consumer_offset의 RF수 (default: 3)
     offsets.topic.replication.factor: 1
-    
+
     # 신규생성 토픽의 RF수 (default: 1)
     default.replication.factor: 1
 
@@ -54,7 +58,7 @@ kafka:
 
     # 모든 토픽의 Record의 메타데이터 timestamp 타입 기본값  # default: CreateTime
     log.message.timestamp.type: LogAppendTime
-    
+
     # default: 100MB #    # 브로커에서 수신가능한 요청 크기 제한 (L4/Network)
     # socket.request.max.bytes: 104857600
 
@@ -108,22 +112,22 @@ kafka:
   # Broker 기능을 포함할 수도 있고, 포함하지 않을 수도 있다. default는 combined node로 실행됨.
   controller:
     replicaCount: 1       # production ready에선 호스트 1대에 kafka 1개, pv 1개 씩만 배치할 것
-    controllerOnly: false  # true: broker 기능을 포함하지 않는 controller-only노드로 실행 
+    controllerOnly: false  # true: broker 기능을 포함하지 않는 controller-only노드로 실행
                            # false(default): controller와 broker 기능을 모두 포함하는 combined node로 실행
-  
+
     # Production 권장값: 가용량의 20~40% 수준이면서, 1~6GB 범위를 넘지 않도록 한다. # 고사양 노드에서, percentage보다는 6GB 넘지 않는 것이 최우선사항.
     heapOpts: -Xmx512m -Xms512m
 
     extraContainerPorts: []
-    
+
     # livenessProbe: Production 배포시 일반적으로 꼭 필요한 편이나, 주의사항이 있음
     livenessProbe:
       enabled: true
-    
+
     # readinessProbe: 필수는 아님. 켜두면 좋음.
     readinessProbe:
       enabled: true
-    
+
     # 솔직히 필요없음. 꺼두는게 낫다.
     startupProbe:
       enabled: false
@@ -172,11 +176,11 @@ kafka:
       enabled: false
       size: 8Gi
       mountPath: /opt/bitnami/kafka/logs
-  
+
   # controller 기능이 없는 순수 broker
   broker:
     replicaCount: 0
-  
+
   # 공통 Service
   service:
     type: LoadBalancer
@@ -194,13 +198,13 @@ kafka:
     # => kafka.service: 1번 과정의 "LoadBalancer 접근 방법"을 결정
     # => kakfa.externalAccess.controller.service: 4번 과정의 "개별 Broker 접근 방법"을 결정
   ##################################################################################################
-  
+
   # externalAccess섹션은 [kafka server.properties의 advertised.listeners] 설정에 관여한다.
-  
+
   # <kafka client가 "tcp-external"로 접근시 동작>
     # 첫번째 통신은 "tcp-external"포트를 사용
     # 이후 client는 advertised.listeners의 [EXTERNAL://IP:Port]로 통신
-  
+
   # <네트워크 연결 검증시 주의 사항>
     # 1회성 통신인 [curl], [kcat토픽조회] 등은 advertised.listeners 주소를 사용하지 않으므로 externalAccess 설정에 오류가 있어도 정상 통신된다.
     # 2회 이상 통신하는 [kafka-topics.sh토픽조회], [produce], [consume] 등으로 테스트 필요
@@ -212,16 +216,16 @@ kafka:
         ports:
           external: 9094  # "tcp-kafka"  (internally used)
 
-        nodePorts: [30003]    # broker 수 만큼 지정 (중복불가) # autoDiscovery 미사용시 필수 # e.g. [30003, 30004, 30005]  
+        nodePorts: [30003]    # broker 수 만큼 지정 (중복불가) # autoDiscovery 미사용시 필수 # e.g. [30003, 30004, 30005]
         externalIPs: []  # broker 수 만큼 지정 # autoDiscovery 미사용시 설정 권장 # broker 별 실제 통신가능한 IP 직접 입력 (중복가능)
 
                          # externalAccess Nodeport모드 && autoDiscovery 미사용 && externalIPs 미등록시
                          # advertisedListener로 "EXTERNAL://{공인IP}:{개별nodeport}"가 자동등록된다.
-                         # EC2에선 괜찮지만, 일반적으로 공인IP를 통한 포트포워딩이 없으므로 사용불가 
+                         # EC2에선 괜찮지만, 일반적으로 공인IP를 통한 포트포워딩이 없으므로 사용불가
 
 
-    # Broker-Only의 externalAccess 설정 (섹션 동일)    
-    broker:                          
+    # Broker-Only의 externalAccess 설정 (섹션 동일)
+    broker:
       service:
         type: LoadBalancer
 
@@ -244,10 +248,11 @@ kafka:
 
   metrics:
     jmx:
-      enabled: true
+      enabled: true    # 브로커 JMX exporter 사이드카 사용 (default: false)
       kafkaJmxPort: 5555
       image:
         registry: docker.io
+        repository: bitnamilegacy/jmx-exporter
       containerSecurityContext:
         enabled: true
       containerPorts:
@@ -283,22 +288,33 @@ kafka:
         {{- if .Values.metrics.jmx.whitelistObjectNames }}
         whitelistObjectNames: ["{{ join "\",\"" .Values.metrics.jmx.whitelistObjectNames }}"]
         {{- end }}
-      existingConfigmap: "" # configmap-jmx-custom  # ""  # 설정시 기본 configmap을 구성하는 다른 values섹션 모두 무시
+      # 수집 규칙 ConfigMap. 지정시 config 등 규칙을 구성하는 다른 values는 무시됨
+      # Strimzi 예제 규칙(skafka/files/jmx): "{{ .Release.Name }}-kafka-jmx"
+      # bitnami 기본 규칙: ""
+      # 직접 작성한 규칙: 해당 ConfigMap 이름 (e.g. configmap-jmx-custom)
+      existingConfigmap: "{{ .Release.Name }}-kafka-jmx"
       extraRules: ""  # |-
         # - pattern: 'java.lang<type=(.+),name=(.+)><>([a-zA-Z0-9_]+)'
         #   name: jvm_$1_$2_$3
         #   type: GAUGE
-      
+
 
     serviceMonitor:
-      enabled: true
+      enabled: true    # Prometheus Operator가 수집하도록 ServiceMonitor 생성. ServiceMonitor CRD 필요 (default: false)
       namespace: ""
       path: /metrics
       interval: ""
       scrapeTimeout: ""
       labels: {}
       selector: {}
-      relabelings: []
+      # Strimzi 대시보드가 찾는 라벨
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_pod_name]
+          targetLabel: kubernetes_pod_name
+        - targetLabel: strimzi_io_cluster
+          replacement: '{{ include "common.names.fullname" . }}'
+        - targetLabel: strimzi_io_name
+          replacement: '{{ include "common.names.fullname" . }}-kafka'
       metricRelabelings: []
       honorLabels: false
       jobLabel: ""
@@ -322,23 +338,30 @@ connect:
   image:
     repository: confluentinc/cp-kafka-connect     # registry 포함 표기 가능. 없으면 container runtime의 default
     pullPolicy: IfNotPresent
-    tag: 7.2.2                                     
+    tag: 7.2.2
   configMapPairs:  # 지정된 KEY 외에도 커스텀 환경변수를 넘길 수 있음
     CONNECT_BOOTSTRAP_SERVERS: "{{ .Release.Name }}-kafka:9092"
     CONNECT_REST_PORT: "8083"
     # KAFKA_HEAP_OPTS: "-Xms4G -Xmx4G"
     # 컨테이너 최대 가용량 대비 힙 비율 설정(requests.limits.memory, 없으면 노드 사양 기준)이고, -Xms, -Xmx가 함께 지정되면 무시됨
-    # KAFKA_HEAP_OPTS: "-XX:InitialRAMPercentage=33 -XX:MaxRAMPercentage=33" 
+    # KAFKA_HEAP_OPTS: "-XX:InitialRAMPercentage=33 -XX:MaxRAMPercentage=33"
+    # JMX exporter javaagent 실행 (connect.metrics.enabled 사용시)
+    # KAFKA_OPTS: "-javaagent:/opt/bitnami/kafka/jmx/jmx_prometheus_javaagent.jar=5556:/opt/bitnami/kafka/jmx/config/jmx-connect-prometheus.yml"
   extraVolumeMounts: # []
     - name: plugin
       mountPath: /usr/share/confluent-hub-components
+    # - name: jmx-config                       # connect.metrics.enabled 사용시
+    #   mountPath: /opt/bitnami/kafka/jmx/config
   extraVolumes:      # []
     - name: plugin
       emptyDir: {}
+    # - name: jmx-config                       # connect.metrics.enabled 사용시
+    #   configMap:
+    #     name: "{{ .Release.Name }}-connect-jmx"
   initContainers:    # []
     - name: init-plugin
       image: confluentinc/cp-kafka-connect:7.2.2  # curl, wget, tar, confluent-hub 가능
-      command: 
+      command:
         - sh
         - -c
         - |
@@ -348,6 +371,19 @@ connect:
       volumeMounts:
         - name: plugin
           mountPath: /usr/share/confluent-hub-components
+
+  # 커넥트 메트릭 수집 (JMX exporter javaagent 방식)
+  # true면 skafka가 수집 규칙 ConfigMap(Strimzi 예제 규칙), 메트릭 Service, ServiceMonitor를 만든다.
+  # 커넥트 서브차트는 그대로 두므로 다음은 직접 지정해야 함
+  #   - javaagent jar가 들어 있는 커넥트 이미지 (connect-image-jmx)
+  #   - configMapPairs.KAFKA_OPTS, extraVolumes, extraVolumeMounts
+  metrics:
+    enabled: false  # javaagent jar 포함 이미지 필수 (기본 cp-kafka-connect 이미지엔 없음)
+    port: 5556
+    serviceMonitor:
+      enabled: false    # Prometheus Operator의 ServiceMonitor CRD 필요
+      labels: {}      # Prometheus의 serviceMonitorSelector에 맞는 라벨
+      interval: ""    # 비워두면 Prometheus 기본 수집 주기
 
 
 k8dashboard:
@@ -367,9 +403,9 @@ ingress:
   enabled: true
   annotations:
     spec.ingressClassName: traefik
-    
+
     # kubernetes.io/ingress.class is deprecated
-    
+
     # # minikube 설치용
     # kubernetes.io/ingress.class: nginx
 

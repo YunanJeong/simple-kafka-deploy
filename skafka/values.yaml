@@ -368,8 +368,21 @@ kafka:
       image:
         registry: docker.io
         repository: bitnamilegacy/jmx-exporter
+      # 수집 규칙 ConfigMap. 지정시 config 등 규칙을 구성하는 다른 values는 무시됨
+      # Strimzi 예제 규칙(skafka/files/jmx): "{{ .Release.Name }}-kafka-jmx"
+      # bitnami 기본 규칙: ""
+      # 직접 작성한 규칙: 해당 ConfigMap 이름 (e.g. configmap-jmx-custom)
+      existingConfigmap: "{{ .Release.Name }}-kafka-jmx"
     serviceMonitor:
-      enabled: false
+      enabled: false    # Prometheus Operator의 ServiceMonitor CRD 필요
+      # Strimzi 대시보드가 찾는 라벨
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_pod_name]
+          targetLabel: kubernetes_pod_name
+        - targetLabel: strimzi_io_cluster
+          replacement: '{{ include "common.names.fullname" . }}'
+        - targetLabel: strimzi_io_name
+          replacement: '{{ include "common.names.fullname" . }}-kafka'
     prometheusRule:
       enabled: false
 
@@ -396,12 +409,19 @@ connect:
     # KAFKA_HEAP_OPTS: "-Xms4G -Xmx4G"
     # 컨테이너 최대 가용량 대비 힙 비율 설정(requests.limits.memory, 없으면 노드 사양 기준)이고, -Xms, -Xmx가 함께 지정되면 무시됨
     # KAFKA_HEAP_OPTS: "-XX:InitialRAMPercentage=33 -XX:MaxRAMPercentage=33" 
+    # JMX exporter javaagent 실행 (connect.metrics.enabled 사용시)
+    # KAFKA_OPTS: "-javaagent:/opt/bitnami/kafka/jmx/jmx_prometheus_javaagent.jar=5556:/opt/bitnami/kafka/jmx/config/jmx-connect-prometheus.yml"
   extraVolumeMounts: []
     # - name: plugin
     #   mountPath: /usr/share/confluent-hub-components
+    # - name: jmx-config                       # connect.metrics.enabled 사용시
+    #   mountPath: /opt/bitnami/kafka/jmx/config
   extraVolumes: []
     # - name: plugin
     #   emptyDir: {}
+    # - name: jmx-config                       # connect.metrics.enabled 사용시
+    #   configMap:
+    #     name: "{{ .Release.Name }}-connect-jmx"
   initContainers: []
     # - name: init-plugin
     #   image: confluentinc/cp-kafka-connect:7.2.2
@@ -415,6 +435,19 @@ connect:
     #   volumeMounts:
     #     - name: plugin
     #       mountPath: /usr/share/confluent-hub-components
+
+  # 커넥트 메트릭 수집 (JMX exporter javaagent 방식)
+  # true면 skafka가 수집 규칙 ConfigMap(Strimzi 예제 규칙), 메트릭 Service, ServiceMonitor를 만든다.
+  # 커넥트 서브차트는 그대로 두므로 다음은 직접 지정해야 함
+  #   - javaagent jar가 들어 있는 커넥트 이미지 (connect-image-jmx)
+  #   - configMapPairs.KAFKA_OPTS, extraVolumes, extraVolumeMounts
+  metrics:
+    enabled: false  # javaagent jar 포함 이미지 필수 (기본 cp-kafka-connect 이미지엔 없음)
+    port: 5556
+    serviceMonitor:
+      enabled: false    # Prometheus Operator의 ServiceMonitor CRD 필요
+      labels: {}      # Prometheus의 serviceMonitorSelector에 맞는 라벨
+      interval: ""    # 비워두면 Prometheus 기본 수집 주기
 
 k8dashboard:
   enabled: true

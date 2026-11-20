@@ -1,0 +1,14 @@
+{{- if and .Values.connect.enabled .Values.connect.metrics.enabled }}
+# 커넥트 JMX exporter javaagent가 읽는 수집 규칙 (Strimzi 예제 규칙)
+# 커넥트 파드의 connect.metrics.javaagent.configDir 경로에 마운트해서 쓴다.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-connect-jmx
+  labels:
+    {{- include "skafka.labels" . | nindent 4 }}
+    app.kubernetes.io/component: connect-jmx
+data:
+  jmx-connect-prometheus.yml: |-
+    {{- .Files.Get "files/jmx/strimzi-connect-rules.yml" | nindent 4 }}
+{{- end }}
