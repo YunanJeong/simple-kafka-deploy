@@ -106,7 +106,7 @@ kubectl delete pvc {pvcName}
 .
 ├── connect-image-jmx/      # 커넥트 이미지 샘플 (플러그인 + JMX exporter javaagent)
 ├── connect-image-jdk11-kfk3/ # 커넥트 이미지 샘플 (구버전 JDK, Kafka)
-├── reference/              # (단순 참고용) 하위 차트의 default value, 메트릭 메모, Strimzi 대시보드 백업
+├── reference/              # (단순 참고용) bitnami kafka 차트 default value(32.4.3 현행, 25.1.11 구버전), 메트릭 메모, Strimzi 대시보드 백업
 ├── skafka/                 # 헬름차트 디렉토리
 │   ├── Chart.lock            # 하위차트 버전 확정
 │   ├── charts/               # 하위차트 생성 경로
@@ -115,8 +115,11 @@ kubectl delete pvc {pvcName}
 │   ├── templates/            # Helm template
 │   └── values.yaml           # default value
 ├── values/                 # 배포시 오버라이딩할 custom value 모음
-│   ├── kraft-multi.yaml      # 샘플(local ip)
-│   └── kraft-multi-ec2.yaml  # 샘플(public ip)
+│   ├── 1node*.yaml           # 노드 1개 배포 예시 (_AD: auto discovery, _jmx: 브로커 JMX 메트릭)
+│   ├── 3node_HA*.yaml        # 노드 3개 HA 배포 예시 (RF 3, minISR 2, pdb 51%)
+│   ├── configmap_jmx_custom.yaml # 직접 작성한 브로커 JMX 수집 규칙 ConfigMap 예시
+│   ├── kafka-multi-pvc.yaml  # 커스텀 PV/PVC 사전생성 예시
+│   └── 2.0.4/                # 구버전(2.0.4) 테스트 이력 백업 (현행 아님)
 └── skafka-x.x.x.tgz        # 차트 배포용 아카이브 파일
 ```
 
@@ -127,7 +130,7 @@ kubectl delete pvc {pvcName}
 helm show values skafka-3.1.0.tgz
 
 # 업데이트
-helm upgrade kfk skafka-3.1.0.tgz -f values/my-kraft-multi.yaml
+helm upgrade kfk skafka-3.1.0.tgz -f values/my-values.yaml
 ```
 
 ## skafka 차트 수정 시 참고
