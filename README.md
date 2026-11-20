@@ -164,7 +164,7 @@ helm package skafka/
 
 ### Kafka 이슈 (커스터마이징, 트러블 슈팅)
 
-[kafka-test](https://github.com/yunanjeong/kafka-test)에 문서화
+[kafka-tips](https://github.com/yunanjeong/kafka-tips)에 문서화
 
 #### broker, connect 모두 정상 Running인데, 개별 connector 조회 및 등록시 timeout 발생 이슈
 
